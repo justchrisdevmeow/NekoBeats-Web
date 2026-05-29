@@ -8,13 +8,11 @@
 </head>
 <body>
 
-  <!-- Status Bar -->
   <div id="status-bar">
     <span id="status-icon">🐱</span>
     <span id="status-text">ready</span>
   </div>
 
-  <!-- Canvas -->
   <div id="canvas-wrap">
     <canvas id="canvas"></canvas>
     <div id="idle-screen">
@@ -24,14 +22,12 @@
     <button id="fullscreen-btn" title="Fullscreen">⛶</button>
   </div>
 
-  <!-- Progress -->
   <div id="progress-wrap">
     <div id="progress-bar"></div>
     <span id="time-current">0:00</span>
     <span id="time-total">0:00</span>
   </div>
 
-  <!-- Transport -->
   <div id="transport">
     <button id="file-btn">upload track</button>
     <input type="file" id="file-input" accept="audio/*">
@@ -42,53 +38,75 @@
     </label>
   </div>
 
-  <!-- Main Panel -->
   <div id="main-panel">
 
-    <!-- Left: Controls -->
     <div id="controls-panel">
       <div class="panel-title">controls</div>
-
       <div class="control-group">
         <div class="control-row">
-          <div class="control-label">bar count <span id="bar-count-out">64</span></div>
-          <input type="range" id="bar-count" min="16" max="256" step="16" value="64">
+          <div class="control-label">bar count</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="range" id="bar-count" min="8" max="512" step="1" value="64" style="flex:1;">
+            <input type="number" id="bar-count-num" min="8" max="512" step="1" value="64" style="width:70px; background:#161616; border:1px solid #222; color:#fff; border-radius:4px; padding:4px 6px;">
+          </div>
         </div>
         <div class="control-row">
-          <div class="control-label">height scale <span id="height-out">1.5</span>x</div>
-          <input type="range" id="height-scale" min="0.5" max="4" step="0.1" value="1.5">
+          <div class="control-label">height scale</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="range" id="height-scale" min="0.1" max="10" step="0.1" value="1.5" style="flex:1;">
+            <input type="number" id="height-scale-num" min="0.1" max="10" step="0.1" value="1.5" style="width:70px; background:#161616; border:1px solid #222; color:#fff; border-radius:4px; padding:4px 6px;">
+          </div>
         </div>
         <div class="control-row">
-          <div class="control-label">sensitivity <span id="sensitivity-out">1.0</span></div>
-          <input type="range" id="sensitivity" min="0.1" max="3" step="0.1" value="1.0">
+          <div class="control-label">sensitivity</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="range" id="sensitivity" min="0.05" max="5" step="0.05" value="1.0" style="flex:1;">
+            <input type="number" id="sensitivity-num" min="0.05" max="5" step="0.05" value="1.0" style="width:70px; background:#161616; border:1px solid #222; color:#fff; border-radius:4px; padding:4px 6px;">
+          </div>
         </div>
         <div class="control-row">
-          <div class="control-label">opacity <span id="opacity-out">100</span>%</div>
-          <input type="range" id="opacity-val" min="10" max="100" step="1" value="100">
+          <div class="control-label">opacity</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="range" id="opacity-val" min="0" max="100" step="1" value="100" style="flex:1;">
+            <input type="number" id="opacity-val-num" min="0" max="100" step="1" value="100" style="width:70px; background:#161616; border:1px solid #222; color:#fff; border-radius:4px; padding:4px 6px;">
+          </div>
         </div>
         <div class="control-row">
-          <div class="control-label">smoothing <span id="smooth-out">0.80</span></div>
-          <input type="range" id="smooth-val" min="0" max="0.95" step="0.05" value="0.8">
+          <div class="control-label">smoothing</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="range" id="smooth-val" min="0" max="0.99" step="0.01" value="0.8" style="flex:1;">
+            <input type="number" id="smooth-val-num" min="0" max="0.99" step="0.01" value="0.8" style="width:70px; background:#161616; border:1px solid #222; color:#fff; border-radius:4px; padding:4px 6px;">
+          </div>
         </div>
         <div class="control-row" id="rainbow-speed-row" style="display:none;">
-          <div class="control-label">rainbow speed <span id="rainbow-speed-out">1.0</span></div>
-          <input type="range" id="rainbow-speed" min="0.1" max="5" step="0.1" value="1.0">
+          <div class="control-label">rainbow speed</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="range" id="rainbow-speed" min="0" max="10" step="0.1" value="1.0" style="flex:1;">
+            <input type="number" id="rainbow-speed-num" min="0" max="10" step="0.1" value="1.0" style="width:70px; background:#161616; border:1px solid #222; color:#fff; border-radius:4px; padding:4px 6px;">
+          </div>
         </div>
         <div class="control-row" id="bloom-intensity-row" style="display:none;">
-          <div class="control-label">bloom intensity <span id="bloom-intensity-out">0.5</span></div>
-          <input type="range" id="bloom-intensity" min="0.1" max="1" step="0.05" value="0.5">
+          <div class="control-label">bloom intensity</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="range" id="bloom-intensity" min="0" max="2" step="0.05" value="0.5" style="flex:1;">
+            <input type="number" id="bloom-intensity-num" min="0" max="2" step="0.05" value="0.5" style="width:70px; background:#161616; border:1px solid #222; color:#fff; border-radius:4px; padding:4px 6px;">
+          </div>
         </div>
         <div class="control-row" id="fade-speed-row" style="display:none;">
-          <div class="control-label">fade speed <span id="fade-speed-out">0.05</span></div>
-          <input type="range" id="fade-speed" min="0.01" max="0.2" step="0.01" value="0.05">
+          <div class="control-label">fade speed</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="range" id="fade-speed" min="0" max="0.5" step="0.01" value="0.05" style="flex:1;">
+            <input type="number" id="fade-speed-num" min="0" max="0.5" step="0.01" value="0.05" style="width:70px; background:#161616; border:1px solid #222; color:#fff; border-radius:4px; padding:4px 6px;">
+          </div>
         </div>
         <div class="control-row" id="particle-count-row" style="display:none;">
-          <div class="control-label">particle count <span id="particle-count-out">50</span></div>
-          <input type="range" id="particle-count" min="10" max="200" step="10" value="50">
+          <div class="control-label">particle count</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="range" id="particle-count" min="0" max="500" step="10" value="50" style="flex:1;">
+            <input type="number" id="particle-count-num" min="0" max="500" step="10" value="50" style="width:70px; background:#161616; border:1px solid #222; color:#fff; border-radius:4px; padding:4px 6px;">
+          </div>
         </div>
       </div>
-
-      <!-- Mode -->
       <div class="panel-title" style="margin-top:16px;">mode</div>
       <div class="btn-group" id="mode-group">
         <button class="mode-btn active" data-mode="bars">bars</button>
@@ -96,8 +114,6 @@
         <button class="mode-btn" data-mode="mirror">mirror</button>
         <button class="mode-btn" data-mode="circle">circle</button>
       </div>
-
-      <!-- Effects -->
       <div class="panel-title" style="margin-top:16px;">effects</div>
       <div class="btn-group" id="effects-group">
         <button class="effect-btn" data-effect="bloom">bloom</button>
@@ -105,13 +121,10 @@
         <button class="effect-btn" data-effect="particles">particles</button>
         <button class="effect-btn" data-effect="space">space</button>
       </div>
-
     </div>
 
-    <!-- Center: Color -->
     <div id="color-panel">
       <div class="panel-title">color</div>
-
       <div class="btn-group" id="color-mode-group">
         <button class="color-mode-btn active" data-cmode="solid">solid</button>
         <button class="color-mode-btn" data-cmode="rainbow">rainbow</button>
@@ -119,12 +132,10 @@
         <button class="color-mode-btn" data-cmode="gradient_bar">gradient bar</button>
         <button class="color-mode-btn" data-cmode="gradient_global">gradient global</button>
       </div>
-
       <div id="solid-color-wrap" class="color-sub">
         <label class="color-label">color</label>
         <input type="color" id="bar-color" value="#00cfd1">
       </div>
-
       <div id="gradient-color-wrap" class="color-sub" style="display:none;">
         <div style="display:flex;gap:12px;align-items:center;">
           <div>
@@ -137,19 +148,15 @@
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- Right: Themes & Bar Themes -->
     <div id="themes-panel">
-
       <div class="panel-title">theme settings</div>
       <div class="btn-group">
         <button id="export-theme-btn">export</button>
         <button id="import-theme-btn">import</button>
         <input type="file" id="import-theme-input" accept=".json" style="display:none;">
       </div>
-
       <div class="panel-title" style="margin-top:16px;">bar theme</div>
       <div id="bartheme-list" class="btn-group-col">
         <button class="bartheme-btn active" data-theme="default">default</button>
@@ -164,8 +171,8 @@
         <button id="import-bartheme-btn">import bar theme</button>
         <input type="file" id="import-bartheme-input" accept=".json" style="display:none;">
       </div>
-
     </div>
+
   </div>
 
   <script src="js/main.js"></script>
