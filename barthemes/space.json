@@ -1,0 +1,21 @@
+{
+  "name": "space",
+  "shape": "line",
+  "width_multiplier": 0.4,
+  "corner_radius": 0,
+  "gap": 2,
+  "stroke_width": 1,
+  "bloom": true,
+  "bloom_intensity": 0.7,
+  "fade": true,
+  "fade_speed": 0.04,
+  "particles": true,
+  "particle_count": 80,
+  "particle_size": 1.5,
+  "particle_speed": 0.6,
+  "space": true,
+  "color_mode": "rainbow_multi",
+  "gradient_start": null,
+  "gradient_end": null,
+  "rainbow_speed": 0.5
+}
