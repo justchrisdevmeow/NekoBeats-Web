@@ -136,26 +136,30 @@
       setStatus('theme imported', '✅');
     }
 
-    document.getElementById('export-theme-btn').addEventListener('click', exportTheme);
-    document.getElementById('import-theme-btn').addEventListener('click', () => {
-      document.getElementById('import-theme-input').click();
-    });
-    document.getElementById('import-theme-input').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      setStatus('importing theme...', '⏳');
-      const reader = new FileReader();
-      reader.onload = ev => {
-        try {
-          const json = JSON.parse(ev.target.result);
-          importTheme(json);
-        } catch (err) {
-          setStatus('import failed: ' + err.message, '❌');
-          console.error(err);
-        }
-      };
-      reader.readAsText(file);
-      e.target.value = '';
-    });
+    const exportBtn = document.getElementById('export-theme-btn');
+    const importBtn = document.getElementById('import-theme-btn');
+    const importInput = document.getElementById('import-theme-input');
+    
+    if (exportBtn) exportBtn.addEventListener('click', exportTheme);
+    if (importBtn && importInput) {
+      importBtn.addEventListener('click', () => importInput.click());
+      importInput.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setStatus('importing theme...', '⏳');
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            const json = JSON.parse(ev.target.result);
+            importTheme(json);
+          } catch (err) {
+            setStatus('import failed: ' + err.message, '❌');
+            console.error(err);
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+      });
+    }
   });
 })();
