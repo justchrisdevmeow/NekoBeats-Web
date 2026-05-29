@@ -8,20 +8,27 @@ function applyLinearScale(data, count) {
 }
 
 function drawWatermark(ctx, W, H) {
-  const size = Math.min(W, H) * 0.04;
+  const baseSize = Math.max(11, Math.min(W, H) * 0.025);
   ctx.save();
-  ctx.font = `${Math.max(10, size)}px monospace`;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.font = `${baseSize}px monospace`;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
   ctx.shadowBlur = 2;
   ctx.shadowColor = 'black';
+  ctx.textAlign = 'left';
   
-  const x = W - 10;
-  const y = 15;
+  const padding = 8;
+  const lineHeight = baseSize + 3;
   
-  ctx.fillText('🐱', x - 25, y);
-  ctx.fillText('made by NekoBeats web', x - 130, y);
-  ctx.font = `${Math.max(8, size - 2)}px monospace`;
-  ctx.fillText('https://sides.catsdevs.online/NekoBeats-Web/', x - 210, y + 15);
+  // Emoji on left
+  ctx.fillText('🐱', padding, padding + baseSize);
+  
+  // Text next to emoji (shorter version)
+  ctx.fillText('NekoBeats', padding + 22, padding + baseSize);
+  
+  // URL below (shorter)
+  ctx.font = `${Math.max(9, baseSize - 2)}px monospace`;
+  ctx.fillText('sides.catsdevs.online/NekoBeats-Web', padding + 22, padding + baseSize + lineHeight);
+  
   ctx.restore();
 }
 
@@ -81,7 +88,6 @@ function draw() {
     Effects.applyFade(ctx, canvas);
   }
 
-  // Add watermark during recording
   if (window.isRecording) {
     drawWatermark(ctx, W, H);
   }
