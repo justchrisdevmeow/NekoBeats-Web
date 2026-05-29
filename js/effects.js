@@ -3,15 +3,6 @@ const Effects = (() => {
   const stars = [];
   let rainbowHue = 0;
   let starsInit = false;
-  const trailCanvas = document.createElement('canvas');
-  const trailCtx = trailCanvas.getContext('2d');
-
-  function syncTrailCanvas(canvas) {
-    if (trailCanvas.width !== canvas.width || trailCanvas.height !== canvas.height) {
-      trailCanvas.width = canvas.width;
-      trailCanvas.height = canvas.height;
-    }
-  }
 
   // ── Rainbow ──
   function getRainbowColor(offset, alpha) {
@@ -63,13 +54,14 @@ const Effects = (() => {
     }
   }
 
-  // ── Bloom ──
+  // ── Bloom (fixed) ──
   function applyBloom(ctx, canvas) {
     const intensity = NB.settings.bloomIntensity;
+    if (intensity <= 0) return;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    ctx.filter = `blur(${Math.round(intensity * 12)}px)`;
-    ctx.globalAlpha = intensity * 0.6;
+    ctx.filter = `blur(${Math.round(intensity * 8)}px)`;
+    ctx.globalAlpha = intensity * 0.4;
     ctx.drawImage(canvas, 0, 0);
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
@@ -77,15 +69,11 @@ const Effects = (() => {
     ctx.restore();
   }
 
-  // ── Fade (trail effect) ──
+  // ── Fade (fixed - simple trail) ──
   function applyFade(ctx, canvas) {
-    syncTrailCanvas(canvas);
-    trailCtx.globalAlpha = 1 - NB.settings.fadeSpeed;
-    trailCtx.drawImage(trailCanvas, 0, 0);
-    trailCtx.globalAlpha = 1;
-    trailCtx.drawImage(canvas, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(trailCanvas, 0, 0);
+    const speed = NB.settings.fadeSpeed;
+    ctx.fillStyle = `rgba(0, 0, 0, ${speed * 0.6})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
   // ── Particles ──
@@ -103,16 +91,17 @@ const Effects = (() => {
 
   function updateParticles(ctx, data, barW, gap, canvasH, total) {
     const maxParticles = NB.settings.particleCount;
+    const s = NB.settings;
 
     for (let i = 0; i < total; i++) {
-      if (particles.length < maxParticles && Math.random() < 0.1) {
+      if (particles.length < maxParticles && Math.random() < 0.08) {
         const val = data[i] / 255;
-        if (val > 0.5) {
+        if (val > 0.6) {
           const x = i * (barW + gap) + barW / 2;
-          const barH = val * canvasH * NB.settings.heightScale * NB.settings.sensitivity;
+          const barH = val * canvasH * s.heightScale * s.sensitivity;
           const y = canvasH - barH;
           const color = resolveColor(ctx, i, total, x, barW, barH, canvasH * 2, canvasH, 1);
-          spawnParticle(x, y, typeof color === 'string' ? color : NB.settings.barColor);
+          spawnParticle(x, y, typeof color === 'string' ? color : s.barColor);
         }
       }
     }
@@ -124,7 +113,7 @@ const Effects = (() => {
       p.life -= p.decay;
       if (p.life <= 0) { particles.splice(i, 1); continue; }
       ctx.save();
-      ctx.globalAlpha = p.life * NB.settings.opacityVal;
+      ctx.globalAlpha = p.life * s.opacityVal;
       ctx.fillStyle = p.color;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
@@ -189,7 +178,7 @@ const Effects = (() => {
   }
 
   function resetTrail() {
-    trailCtx.clearRect(0, 0, trailCanvas.width, trailCanvas.height);
+    // Nothing to reset now
   }
 
   return {
