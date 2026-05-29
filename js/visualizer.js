@@ -1,10 +1,8 @@
-function applyLogScale(data, count) {
+function applyLinearScale(data, count) {
   const result = new Uint8Array(count);
-  const nyquist = data.length;
   for (let i = 0; i < count; i++) {
-    const t = i / (count - 1);
-    const index = Math.floor(Math.pow(t, 1.5) * (nyquist - 1));
-    result[i] = data[Math.min(index, nyquist - 1)];
+    const index = Math.floor(i * data.length / count);
+    result[i] = data[Math.min(index, data.length - 1)];
   }
   return result;
 }
@@ -33,19 +31,19 @@ function draw() {
   }
 
   const freqData = new Uint8Array(NB.analyser.frequencyBinCount);
-  const timeData = new Uint8Array(NB.analyser.fftSize);
   NB.analyser.getByteFrequencyData(freqData);
-  NB.analyser.getByteTimeDomainData(timeData);
 
   let rawData = new Uint8Array(freqData.length);
   for (let i = 0; i < freqData.length; i++) {
-    rawData[i] = Math.min(255, freqData[i] * s.sensitivity);
+    let val = freqData[i] * s.sensitivity * 2;
+    rawData[i] = Math.min(255, val);
   }
-  const data = applyLogScale(rawData, s.barCount);
+  
+  const data = applyLinearScale(rawData, s.barCount);
 
   switch (s.mode) {
     case 'bars':   drawBars(ctx, data, W, H, bt); break;
-    case 'wave':   drawWave(ctx, timeData, W, H);  break;
+    case 'wave':   drawWave(ctx, data, W, H);  break;
     case 'mirror': drawMirror(ctx, data, W, H, bt); break;
     case 'circle': drawCircle(ctx, data, W, H, bt); break;
   }
@@ -110,14 +108,14 @@ function drawMirror(ctx, data, W, H, bt) {
   }
 }
 
-function drawWave(ctx, timeData, W, H) {
+function drawWave(ctx, data, W, H) {
   const s = NB.settings;
   ctx.beginPath();
   ctx.lineWidth = 2;
   ctx.strokeStyle = Effects.resolveColor(ctx, 0, 1, 0, W, H, W, H, s.opacityVal);
-  const step = W / timeData.length;
-  for (let i = 0; i < timeData.length; i++) {
-    const y = (timeData[i] / 128.0) * (H / 2);
+  const step = W / data.length;
+  for (let i = 0; i < data.length; i++) {
+    const y = (data[i] / 255) * H;
     i === 0 ? ctx.moveTo(0, y) : ctx.lineTo(i * step, y);
   }
   ctx.stroke();
