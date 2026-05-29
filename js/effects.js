@@ -56,8 +56,8 @@ const Effects = (() => {
     if (intensity <= 0) return;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    ctx.filter = `blur(${Math.round(intensity * 8)}px)`;
-    ctx.globalAlpha = intensity * 0.4;
+    ctx.filter = `blur(${Math.round(intensity * 6)}px)`;
+    ctx.globalAlpha = intensity * 0.3;
     ctx.drawImage(canvas, 0, 0);
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
@@ -67,7 +67,8 @@ const Effects = (() => {
 
   function applyFade(ctx, canvas) {
     const speed = NB.settings.fadeSpeed;
-    ctx.fillStyle = `rgba(0, 0, 0, ${speed * 0.6})`;
+    if (speed <= 0) return;
+    ctx.fillStyle = `rgba(0, 0, 0, ${speed * 0.3})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
@@ -86,15 +87,16 @@ const Effects = (() => {
   function updateParticles(ctx, data, barW, gap, canvasH, total) {
     const maxParticles = NB.settings.particleCount;
     const s = NB.settings;
+    const barCount = s.barCount;
 
-    for (let i = 0; i < total; i++) {
-      if (particles.length < maxParticles && Math.random() < 0.08) {
+    for (let i = 0; i < barCount; i++) {
+      if (particles.length < maxParticles && Math.random() < 0.05) {
         const val = data[i] / 255;
-        if (val > 0.6) {
+        if (val > 0.7) {
           const x = i * (barW + gap) + barW / 2;
-          const barH = val * canvasH * s.heightScale * s.sensitivity;
+          const barH = val * canvasH * s.heightScale;
           const y = canvasH - barH;
-          const color = resolveColor(ctx, i, total, x, barW, barH, canvasH * 2, canvasH, 1);
+          const color = resolveColor(ctx, i, barCount, x, barW, barH, canvasH * 2, canvasH, 1);
           spawnParticle(x, y, typeof color === 'string' ? color : s.barColor);
         }
       }
@@ -169,7 +171,10 @@ const Effects = (() => {
     return `rgba(${r},${g},${b},${alpha})`;
   }
 
-  function resetTrail() {}
+  function resetTrail() {
+    // Clear particles on theme change
+    particles.length = 0;
+  }
 
   return {
     resolveColor,
