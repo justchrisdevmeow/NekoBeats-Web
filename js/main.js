@@ -86,6 +86,7 @@ function play(offset) {
 
   NB.startOffset = offset;
   NB.startTime = NB.audioCtx.currentTime;
+  const currentSource = NB.source;
   
   try {
     NB.source.start(0, offset);
@@ -107,8 +108,8 @@ function play(offset) {
 
   updateProgress();
 
-  NB.source.onended = () => {
-    if (!NB.loop && NB.pausedAt === 0 && NB.playing) {
+  currentSource.onended = () => {
+    if (NB.source === currentSource && !NB.loop && NB.pausedAt === 0 && NB.playing) {
       NB.playing = false;
       if (!window.isRecording) {
         const idleScreen = document.getElementById('idle-screen');
