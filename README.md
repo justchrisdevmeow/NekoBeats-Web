@@ -48,7 +48,7 @@ NekoBeats-Web/
 │   ├── controls.js    — slider/button listeners
 │   ├── themes.js      — theme export/import
 │   └── barthemes.js   — bar theme presets + validation
-└── barthemes/         — JSON exports for each preset
+└── barthemes/         — Built-in bar themes for each preset
 ```
 
 ## Bar Theme Schema
