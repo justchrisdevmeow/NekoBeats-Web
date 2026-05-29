@@ -15,7 +15,7 @@ const NB = {
     heightScale: 1.5,
     sensitivity: 1.0,
     opacityVal: 1.0,
-    smoothing: 0.3,  // CHANGED: was 0.8, now faster like C#
+    smoothing: 0.3,
     rainbowSpeed: 1.0,
     bloomIntensity: 0.5,
     fadeSpeed: 0.05,
@@ -189,6 +189,96 @@ function updateProgress() {
 
 window.updateProgress = updateProgress;
 
+// Video recording
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordingStream = null;
+let canvasStream = null;
+let audioStream = null;
+let isRecording = false;
+
+async function startRecording() {
+  const canvas = document.getElementById('canvas');
+  const audioCtx = NB.audioCtx;
+  
+  if (!NB.buffer) {
+    setStatus('No audio loaded', '❌');
+    return;
+  }
+  
+  // Pause and seek to 0
+  if (NB.playing) {
+    pause();
+  }
+  play(0);
+  
+  // Wait for audio to start
+  await new Promise(r => setTimeout(r, 100));
+  
+  // Get canvas stream
+  canvasStream = canvas.captureStream(60);
+  
+  // Create audio destination for recording
+  const dest = audioCtx.createMediaStreamDestination();
+  NB.analyser.connect(dest);
+  
+  audioStream = dest.stream;
+  
+  // Combine streams
+  recordingStream = new MediaStream([
+    ...canvasStream.getVideoTracks(),
+    ...audioStream.getAudioTracks()
+  ]);
+  
+  mediaRecorder = new MediaRecorder(recordingStream, {
+    mimeType: 'video/webm'
+  });
+  
+  recordedChunks = [];
+  
+  mediaRecorder.ondataavailable = (e) => {
+    if (e.data.size > 0) recordedChunks.push(e.data);
+  };
+  
+  mediaRecorder.onstop = () => {
+    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `nekobeats_${new Date().toISOString().slice(0,19)}.webm`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus('Video saved', '💾');
+    
+    // Cleanup
+    if (recordingStream) recordingStream.getTracks().forEach(t => t.stop());
+    NB.analyser.disconnect(dest);
+    isRecording = false;
+    const btn = document.getElementById('export-video-btn');
+    if (btn) btn.textContent = 'export video';
+  };
+  
+  mediaRecorder.start();
+  isRecording = true;
+  const btn = document.getElementById('export-video-btn');
+  if (btn) btn.textContent = 'recording...';
+  setStatus('Recording from start...', '🔴');
+}
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+  }
+}
+
+function toggleRecording() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('canvas');
   const wrap = document.getElementById('canvas-wrap');
@@ -246,6 +336,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const playPauseBtn = document.getElementById('play-pause-btn');
   if (playPauseBtn) {
     playPauseBtn.addEventListener('click', togglePlayPause);
+  }
+
+  const exportVideoBtn = document.getElementById('export-video-btn');
+  if (exportVideoBtn) {
+    exportVideoBtn.addEventListener('click', toggleRecording);
   }
 
   setStatus('ready', '🐱');
