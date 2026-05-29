@@ -7,6 +7,24 @@ function applyLinearScale(data, count) {
   return result;
 }
 
+function drawWatermark(ctx, W, H) {
+  const size = Math.min(W, H) * 0.04;
+  ctx.save();
+  ctx.font = `${Math.max(10, size)}px monospace`;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.shadowBlur = 2;
+  ctx.shadowColor = 'black';
+  
+  const x = W - 10;
+  const y = 15;
+  
+  ctx.fillText('🐱', x - 25, y);
+  ctx.fillText('made by NekoBeats web', x - 130, y);
+  ctx.font = `${Math.max(8, size - 2)}px monospace`;
+  ctx.fillText('https://sides.catsdevs.online/NekoBeats-Web/', x - 210, y + 15);
+  ctx.restore();
+}
+
 function draw() {
   NB.animId = requestAnimationFrame(draw);
   if (!NB.analyser) return;
@@ -61,6 +79,11 @@ function draw() {
 
   if (s.effects.fade || bt.fade) {
     Effects.applyFade(ctx, canvas);
+  }
+
+  // Add watermark during recording
+  if (window.isRecording) {
+    drawWatermark(ctx, W, H);
   }
 }
 
