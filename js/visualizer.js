@@ -16,18 +16,19 @@ function drawWatermark(ctx, W, H) {
   ctx.shadowColor = 'black';
   ctx.textAlign = 'left';
   
-  const padding = 8;
+  const padding = 12;
+  const topPadding = 16;
   const lineHeight = baseSize + 3;
   
   // Emoji on left
-  ctx.fillText('🐱', padding, padding + baseSize);
+  ctx.fillText('🐱', padding, topPadding + baseSize);
   
   // Text next to emoji (shorter version)
-  ctx.fillText('NekoBeats', padding + 22, padding + baseSize);
+  ctx.fillText('NekoBeats', padding + 22, topPadding + baseSize);
   
   // URL below (shorter)
   ctx.font = `${Math.max(9, baseSize - 2)}px monospace`;
-  ctx.fillText('sides.catsdevs.online/NekoBeats-Web', padding + 22, padding + baseSize + lineHeight);
+  ctx.fillText('sides.catsdevs.online/NekoBeats-Web', padding + 22, topPadding + baseSize + lineHeight);
   
   ctx.restore();
 }
