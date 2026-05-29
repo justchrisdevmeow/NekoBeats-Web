@@ -8,6 +8,7 @@ const NB = {
   startOffset: 0,
   playing: false,
   loop: false,
+  pausedAt: 0,
 
   settings: {
     barCount: 64,
@@ -37,13 +38,16 @@ const NB = {
 window.NB = NB;
 
 function setStatus(text, icon) {
-  document.getElementById('status-text').textContent = text;
-  if (icon) document.getElementById('status-icon').textContent = icon;
+  const statusText = document.getElementById('status-text');
+  const statusIcon = document.getElementById('status-icon');
+  if (statusText) statusText.textContent = text;
+  if (icon && statusIcon) statusIcon.textContent = icon;
 }
 
 window.setStatus = setStatus;
 
 function formatTime(s) {
+  if (isNaN(s)) return '0:00';
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60).toString().padStart(2, '0');
   return `${m}:${sec}`;
@@ -62,11 +66,14 @@ function setupAnalyser() {
 }
 
 function play(offset) {
+  if (!NB.buffer) return;
+  
   if (NB.source) {
     try { NB.source.stop(); } catch(e) {}
     NB.source.disconnect();
   }
 
+  initAudioCtx();
   setupAnalyser();
 
   NB.source = NB.audioCtx.createBufferSource();
@@ -79,17 +86,25 @@ function play(offset) {
   NB.startTime = NB.audioCtx.currentTime;
   NB.source.start(0, offset);
   NB.playing = true;
+  NB.pausedAt = 0;
 
-  document.getElementById('idle-screen').style.display = 'none';
-  setStatus('playing: ' + document.getElementById('track-name').textContent, '▶');
+  const idleScreen = document.getElementById('idle-screen');
+  if (idleScreen) idleScreen.style.display = 'none';
+  setStatus('playing: ' + (document.getElementById('track-name')?.textContent || 'track'), '▶');
+
+  const playPauseBtn = document.getElementById('play-pause-btn');
+  if (playPauseBtn) playPauseBtn.textContent = '⏸';
 
   NB.source.onended = () => {
-    if (!NB.loop) {
+    if (!NB.loop && !NB.pausedAt) {
       NB.playing = false;
-      document.getElementById('idle-screen').style.display = 'flex';
-      document.getElementById('progress-bar').style.width = '0%';
-      document.getElementById('time-current').textContent = '0:00';
+      if (idleScreen) idleScreen.style.display = 'flex';
+      const progressBar = document.getElementById('progress-bar');
+      if (progressBar) progressBar.style.width = '0%';
+      const timeCurrent = document.getElementById('time-current');
+      if (timeCurrent) timeCurrent.textContent = '0:00';
       setStatus('ready', '🐱');
+      if (playPauseBtn) playPauseBtn.textContent = '▶';
     }
   };
 
@@ -98,11 +113,40 @@ function play(offset) {
   }
 }
 
+function pause() {
+  if (!NB.playing || !NB.source || !NB.buffer) return;
+  
+  const elapsed = NB.audioCtx.currentTime - NB.startTime + NB.startOffset;
+  NB.pausedAt = Math.min(elapsed, NB.buffer.duration);
+  NB.source.stop();
+  NB.playing = false;
+  setStatus('paused', '⏸');
+  const playPauseBtn = document.getElementById('play-pause-btn');
+  if (playPauseBtn) playPauseBtn.textContent = '▶';
+}
+
+function togglePlayPause() {
+  if (!NB.buffer) return;
+  
+  if (NB.playing) {
+    pause();
+  } else {
+    if (NB.pausedAt > 0) {
+      play(NB.pausedAt);
+    } else if (NB.buffer) {
+      play(0);
+    }
+  }
+}
+
 window.play = play;
+window.pause = pause;
+window.togglePlayPause = togglePlayPause;
 
 function loadFile(file) {
   setStatus('loading: ' + file.name, '⏳');
-  document.getElementById('track-name').textContent = file.name;
+  const trackName = document.getElementById('track-name');
+  if (trackName) trackName.textContent = file.name;
 
   initAudioCtx();
 
@@ -110,7 +154,9 @@ function loadFile(file) {
   reader.onload = ev => {
     NB.audioCtx.decodeAudioData(ev.target.result, buf => {
       NB.buffer = buf;
-      document.getElementById('time-total').textContent = formatTime(buf.duration);
+      NB.pausedAt = 0;
+      const timeTotal = document.getElementById('time-total');
+      if (timeTotal) timeTotal.textContent = formatTime(buf.duration);
       play(0);
     }, err => {
       setStatus('error: could not decode audio', '❌');
@@ -122,57 +168,85 @@ function loadFile(file) {
 }
 
 function updateProgress() {
-  if (!NB.playing || !NB.buffer) return;
-  const elapsed = NB.audioCtx.currentTime - NB.startTime + NB.startOffset;
-  const pct = Math.min((elapsed / NB.buffer.duration) * 100, 100);
-  document.getElementById('progress-bar').style.width = pct + '%';
-  document.getElementById('time-current').textContent = formatTime(elapsed);
+  if (!NB.buffer) return;
+  
+  let elapsed;
+  if (NB.playing && NB.source && NB.audioCtx) {
+    elapsed = NB.audioCtx.currentTime - NB.startTime + NB.startOffset;
+  } else if (NB.pausedAt > 0) {
+    elapsed = NB.pausedAt;
+  } else {
+    return;
+  }
+  
+  elapsed = Math.min(elapsed, NB.buffer.duration);
+  const pct = (elapsed / NB.buffer.duration) * 100;
+  const progressBar = document.getElementById('progress-bar');
+  if (progressBar) progressBar.style.width = pct + '%';
+  const timeCurrent = document.getElementById('time-current');
+  if (timeCurrent) timeCurrent.textContent = formatTime(elapsed);
 }
 
 window.updateProgress = updateProgress;
-window.formatTime = formatTime;
 
 document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('canvas');
   const wrap = document.getElementById('canvas-wrap');
 
   function resizeCanvas() {
-    canvas.width = wrap.clientWidth;
-    canvas.height = wrap.clientHeight;
+    if (canvas && wrap) {
+      canvas.width = wrap.clientWidth;
+      canvas.height = wrap.clientHeight;
+    }
   }
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
-  document.getElementById('file-btn').addEventListener('click', () => {
-    document.getElementById('file-input').click();
-  });
+  const fileBtn = document.getElementById('file-btn');
+  const fileInput = document.getElementById('file-input');
+  if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) loadFile(file);
+    });
+  }
 
-  document.getElementById('file-input').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (file) loadFile(file);
-  });
+  const loopToggle = document.getElementById('loop-toggle');
+  if (loopToggle) {
+    loopToggle.addEventListener('change', e => {
+      NB.loop = e.target.checked;
+      if (NB.source) NB.source.loop = NB.loop;
+      setStatus(NB.loop ? 'loop enabled' : 'loop disabled', '🔁');
+      setTimeout(() => setStatus(NB.playing ? 'playing: ' + (document.getElementById('track-name')?.textContent || 'track') : 'ready', NB.playing ? '▶' : '🐱'), 1500);
+    });
+  }
 
-  document.getElementById('loop-toggle').addEventListener('change', e => {
-    NB.loop = e.target.checked;
-    if (NB.source) NB.source.loop = NB.loop;
-    setStatus(NB.loop ? 'loop enabled' : 'loop disabled', '🔁');
-    setTimeout(() => setStatus(NB.playing ? 'playing: ' + document.getElementById('track-name').textContent : 'ready', NB.playing ? '▶' : '🐱'), 1500);
-  });
+  const progressWrap = document.getElementById('progress-wrap');
+  if (progressWrap) {
+    progressWrap.addEventListener('click', e => {
+      if (!NB.buffer) return;
+      const rect = progressWrap.getBoundingClientRect();
+      const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+      play(ratio * NB.buffer.duration);
+    });
+  }
 
-  document.getElementById('progress-wrap').addEventListener('click', e => {
-    if (!NB.buffer) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    play(ratio * NB.buffer.duration);
-  });
+  const fullscreenBtn = document.getElementById('fullscreen-btn');
+  if (fullscreenBtn && wrap) {
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        wrap.requestFullscreen().catch(err => console.error(err));
+      } else {
+        document.exitFullscreen();
+      }
+    });
+  }
 
-  document.getElementById('fullscreen-btn').addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-      wrap.requestFullscreen().catch(err => console.error(err));
-    } else {
-      document.exitFullscreen();
-    }
-  });
+  const playPauseBtn = document.getElementById('play-pause-btn');
+  if (playPauseBtn) {
+    playPauseBtn.addEventListener('click', togglePlayPause);
+  }
 
   setStatus('ready', '🐱');
 });
