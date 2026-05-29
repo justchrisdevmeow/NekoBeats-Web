@@ -76,8 +76,8 @@
         <div class="control-row">
           <div class="control-label">smoothing</div>
           <div style="display:flex; gap:8px; align-items:center;">
-            <input type="range" id="smooth-val" min="0" max="0.99" step="0.01" value="0.8" style="flex:1;">
-            <input type="number" id="smooth-val-num" min="0" max="0.99" step="0.01" value="0.8" style="width:70px; background:#161616; border:1px solid #222; color:#fff; border-radius:4px; padding:4px 6px;">
+            <input type="range" id="smooth-val" min="0" max="0.99" step="0.01" value="0.3" style="flex:1;">
+            <input type="number" id="smooth-val-num" min="0" max="0.99" step="0.01" value="0.3" style="width:70px; background:#161616; border:1px solid #222; color:#fff; border-radius:4px; padding:4px 6px;">
           </div>
         </div>
         <div class="control-row" id="rainbow-speed-row" style="display:none;">
@@ -158,6 +158,7 @@
         <button id="export-theme-btn">export</button>
         <button id="import-theme-btn">import</button>
         <input type="file" id="import-theme-input" accept=".json" style="display:none;">
+        <button id="export-video-btn">export video</button>
       </div>
       <div class="panel-title" style="margin-top:16px;">bar theme</div>
       <div id="bartheme-list" class="btn-group-col">
