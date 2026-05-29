@@ -73,6 +73,8 @@ canvas {
   justify-content: center;
   gap: 12px;
   pointer-events: none;
+  z-index: 5;
+  background: rgba(3, 3, 3, 0.95);
 }
 
 #idle-cat {
