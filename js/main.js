@@ -218,6 +218,12 @@ async function startRecording() {
     return;
   }
   
+  // Get track name for filename
+  const trackName = document.getElementById('track-name')?.textContent || 'visualization';
+  const safeName = trackName.replace(/[^a-z0-9]/gi, '_').substring(0, 50);
+  
+  setStatus(`Exporting: ${trackName}`, '📹');
+  
   // Save original canvas size
   originalCanvasSize.width = canvas.width;
   originalCanvasSize.height = canvas.height;
@@ -274,10 +280,10 @@ async function startRecording() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `nekobeats_${new Date().toISOString().slice(0,19)}.webm`;
+    a.download = `nekobeats_${safeName}_${new Date().toISOString().slice(0,19)}.webm`;
     a.click();
     URL.revokeObjectURL(url);
-    setStatus('Video saved', '💾');
+    setStatus(`Saved: ${trackName}`, '💾');
     
     // Restore original canvas size
     canvas.width = originalCanvasSize.width;
@@ -290,13 +296,17 @@ async function startRecording() {
     isRecording = false;
     const btn = document.getElementById('export-video-btn');
     if (btn) btn.textContent = 'export video';
+    
+    // Reset status after 3 seconds
+    setTimeout(() => {
+      if (!isRecording) setStatus('ready', '🐱');
+    }, 3000);
   };
   
   mediaRecorder.start();
   isRecording = true;
   const btn = document.getElementById('export-video-btn');
   if (btn) btn.textContent = 'recording...';
-  setStatus('Recording from start...', '🔴');
 }
 
 function stopRecording() {
