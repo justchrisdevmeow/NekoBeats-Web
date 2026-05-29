@@ -218,11 +218,17 @@ async function startRecording() {
     return;
   }
   
-  // Get track name for filename
   const trackName = document.getElementById('track-name')?.textContent || 'visualization';
   const safeName = trackName.replace(/[^a-z0-9]/gi, '_').substring(0, 50);
   
   setStatus(`Exporting: ${trackName}`, '📹');
+  
+  // Update button style
+  const exportBtn = document.getElementById('export-video-btn');
+  if (exportBtn) {
+    exportBtn.classList.add('recording');
+    exportBtn.textContent = 'recording...';
+  }
   
   // Save original canvas size
   originalCanvasSize.width = canvas.width;
@@ -232,7 +238,7 @@ async function startRecording() {
   canvas.width = wrap.clientWidth;
   canvas.height = wrap.clientHeight;
   
-  // Force redraw at new size
+  // Force redraw
   if (NB.analyser) draw();
   
   // Save current playback position
@@ -244,7 +250,7 @@ async function startRecording() {
     currentPos = NB.pausedAt;
   }
   
-  // Seek to 0 for recording
+  // Seek to 0 and play
   play(0);
   
   // Wait for audio to start
@@ -285,17 +291,21 @@ async function startRecording() {
     URL.revokeObjectURL(url);
     setStatus(`Saved: ${trackName}`, '💾');
     
-    // Restore original canvas size
+    // Restore canvas size
     canvas.width = originalCanvasSize.width;
     canvas.height = originalCanvasSize.height;
     draw();
     
-    // Cleanup
+    // Cleanup streams
     if (recordingStream) recordingStream.getTracks().forEach(t => t.stop());
     NB.analyser.disconnect(dest);
     isRecording = false;
-    const btn = document.getElementById('export-video-btn');
-    if (btn) btn.textContent = 'export video';
+    
+    // Reset button
+    if (exportBtn) {
+      exportBtn.classList.remove('recording');
+      exportBtn.textContent = 'export video';
+    }
     
     // Reset status after 3 seconds
     setTimeout(() => {
@@ -305,8 +315,6 @@ async function startRecording() {
   
   mediaRecorder.start();
   isRecording = true;
-  const btn = document.getElementById('export-video-btn');
-  if (btn) btn.textContent = 'recording...';
 }
 
 function stopRecording() {
