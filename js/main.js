@@ -105,6 +105,8 @@ function play(offset) {
   const playPauseBtn = document.getElementById('play-pause-btn');
   if (playPauseBtn) playPauseBtn.textContent = '⏸';
 
+  updateProgress();
+
   NB.source.onended = () => {
     if (!NB.loop && NB.pausedAt === 0 && NB.playing) {
       NB.playing = false;
@@ -238,18 +240,14 @@ async function startRecording() {
   
   window.isRecording = true;
   
-  // Save original canvas size
   originalCanvasSize.width = canvas.width;
   originalCanvasSize.height = canvas.height;
   
-  // Resize to FULL WINDOW
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight - 32;
   
-  // Force redraw
   if (NB.analyser) draw();
   
-  // Save current playback position
   let currentPos = 0;
   if (NB.playing) {
     currentPos = NB.audioCtx.currentTime - NB.startTime + NB.startOffset;
@@ -258,22 +256,17 @@ async function startRecording() {
     currentPos = NB.pausedAt;
   }
   
-  // Seek to 0 and play
   play(0);
   
-  // Wait for audio to start
   await new Promise(r => setTimeout(r, 100));
   
-  // Get canvas stream
   canvasStream = canvas.captureStream(60);
   
-  // Create audio destination for recording
   const dest = audioCtx.createMediaStreamDestination();
   NB.analyser.connect(dest);
   
   audioStream = dest.stream;
   
-  // Combine streams
   recordingStream = new MediaStream([
     ...canvasStream.getVideoTracks(),
     ...audioStream.getAudioTracks()
@@ -299,24 +292,20 @@ async function startRecording() {
     URL.revokeObjectURL(url);
     setStatus(`Saved: ${trackName}`, '💾');
     
-    // Restore canvas size
     canvas.width = originalCanvasSize.width;
     canvas.height = originalCanvasSize.height;
     draw();
     
-    // Cleanup streams
     if (recordingStream) recordingStream.getTracks().forEach(t => t.stop());
     NB.analyser.disconnect(dest);
     isRecording = false;
     window.isRecording = false;
     
-    // Reset button
     if (exportBtn) {
       exportBtn.classList.remove('recording');
       exportBtn.textContent = 'export video';
     }
     
-    // Reset status after 3 seconds
     setTimeout(() => {
       if (!isRecording) setStatus('ready', '🐱');
     }, 3000);
