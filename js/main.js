@@ -257,7 +257,7 @@ async function startRecording() {
     currentPos = NB.pausedAt;
   }
   
-  play(currentPos);
+  play(0);
   
   await new Promise(r => setTimeout(r, 100));
   
