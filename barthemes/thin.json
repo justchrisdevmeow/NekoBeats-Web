@@ -1,0 +1,21 @@
+{
+  "name": "thin",
+  "shape": "line",
+  "width_multiplier": 0.3,
+  "corner_radius": 0,
+  "gap": 2,
+  "stroke_width": 1,
+  "bloom": true,
+  "bloom_intensity": 0.4,
+  "fade": false,
+  "fade_speed": 0.05,
+  "particles": false,
+  "particle_count": 20,
+  "particle_size": 1,
+  "particle_speed": 0.8,
+  "space": false,
+  "color_mode": null,
+  "gradient_start": null,
+  "gradient_end": null,
+  "rainbow_speed": 1
+}
