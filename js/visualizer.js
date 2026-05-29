@@ -1,3 +1,14 @@
+function applyLogScale(data, count) {
+  const result = new Uint8Array(count);
+  const nyquist = data.length;
+  for (let i = 0; i < count; i++) {
+    const t = i / (count - 1);
+    const index = Math.floor(Math.pow(t, 1.5) * (nyquist - 1));
+    result[i] = data[Math.min(index, nyquist - 1)];
+  }
+  return result;
+}
+
 function draw() {
   NB.animId = requestAnimationFrame(draw);
   if (!NB.analyser) return;
@@ -11,16 +22,14 @@ function draw() {
   const s = NB.settings;
   const bt = BarThemes.current();
 
-  // Space background or clear
   if (s.effects.space || bt.space) {
     Effects.drawSpace(ctx, W, H);
   } else if (s.effects.fade || bt.fade) {
-    // fade handles its own clear via trail
+    // fade handles its own clear
   } else {
     ctx.clearRect(0, 0, W, H);
   }
 
-  // Tick rainbow hue each frame
   if (s.colorMode === 'rainbow' || s.colorMode === 'rainbow_multi') {
     Effects.tickRainbow();
   }
@@ -30,11 +39,11 @@ function draw() {
   NB.analyser.getByteFrequencyData(freqData);
   NB.analyser.getByteTimeDomainData(timeData);
 
-  // Apply sensitivity to freq data
-  const data = new Uint8Array(freqData.length);
+  let rawData = new Uint8Array(freqData.length);
   for (let i = 0; i < freqData.length; i++) {
-    data[i] = Math.min(255, freqData[i] * s.sensitivity);
+    rawData[i] = Math.min(255, freqData[i] * s.sensitivity);
   }
+  const data = applyLogScale(rawData, s.barCount);
 
   switch (s.mode) {
     case 'bars':   drawBars(ctx, data, W, H, bt); break;
@@ -43,7 +52,6 @@ function draw() {
     case 'circle': drawCircle(ctx, data, W, H, bt); break;
   }
 
-  // Particles
   if (s.effects.particles || bt.particles) {
     const count = s.barCount;
     const gap = bt.gap !== undefined ? bt.gap : 2;
@@ -51,12 +59,10 @@ function draw() {
     Effects.updateParticles(ctx, data, barW, gap, H, count);
   }
 
-  // Bloom
   if (s.effects.bloom || bt.bloom) {
     Effects.applyBloom(ctx, canvas);
   }
 
-  // Fade trail
   if (s.effects.fade || bt.fade) {
     Effects.applyFade(ctx, canvas);
   }
@@ -64,7 +70,6 @@ function draw() {
 
 window.draw = draw;
 
-// ── Bars ──
 function drawBars(ctx, data, W, H, bt) {
   const s = NB.settings;
   const count = s.barCount;
@@ -79,17 +84,13 @@ function drawBars(ctx, data, W, H, bt) {
     const barH = Math.max(val * H * s.heightScale, 1);
     const x = i * (barW + gap) + ((barW / widthMul) - barW) / 2;
     const y = H - barH;
-    const alpha = s.opacityVal * (0.4 + val * 0.6);
     const color = Effects.resolveColor(ctx, i, count, x, barW, barH, W, H, 0.4 + val * 0.6);
-
     ctx.fillStyle = color;
     ctx.strokeStyle = color;
-
     drawShape(ctx, shape, x, y, barW, barH, radius, val, bt);
   }
 }
 
-// ── Mirror ──
 function drawMirror(ctx, data, W, H, bt) {
   const s = NB.settings;
   const count = s.barCount;
@@ -105,21 +106,17 @@ function drawMirror(ctx, data, W, H, bt) {
     const x = i * (barW + gap) + ((barW / widthMul) - barW) / 2;
     const y = H / 2 - barH / 2;
     const color = Effects.resolveColor(ctx, i, count, x, barW, barH, W, H, s.opacityVal);
-
     ctx.fillStyle = color;
     ctx.strokeStyle = color;
-
     drawShape(ctx, shape, x, y, barW, barH, radius, val, bt);
   }
 }
 
-// ── Wave ──
 function drawWave(ctx, timeData, W, H) {
   const s = NB.settings;
   ctx.beginPath();
   ctx.lineWidth = 2;
   ctx.strokeStyle = Effects.resolveColor(ctx, 0, 1, 0, W, H, W, H, s.opacityVal);
-
   const step = W / timeData.length;
   for (let i = 0; i < timeData.length; i++) {
     const y = (timeData[i] / 128.0) * (H / 2);
@@ -128,7 +125,6 @@ function drawWave(ctx, timeData, W, H) {
   ctx.stroke();
 }
 
-// ── Circle ──
 function drawCircle(ctx, data, W, H, bt) {
   const s = NB.settings;
   const count = s.barCount;
@@ -145,11 +141,9 @@ function drawCircle(ctx, data, W, H, bt) {
     const y1 = cy + Math.sin(angle) * radius;
     const x2 = cx + Math.cos(angle) * (radius + len);
     const y2 = cy + Math.sin(angle) * (radius + len);
-
     const color = Effects.resolveColor(ctx, i, count, x1, 2, len, W, H, s.opacityVal * (0.3 + val * 0.7));
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
-
     if (shape === 'dot') {
       ctx.beginPath();
       ctx.arc(x2, y2, Math.max(val * 4, 1), 0, Math.PI * 2);
@@ -164,7 +158,6 @@ function drawCircle(ctx, data, W, H, bt) {
   }
 }
 
-// ── Shape Renderer ──
 function drawShape(ctx, shape, x, y, w, h, radius, val, bt) {
   switch (shape) {
     case 'rounded':
@@ -177,7 +170,6 @@ function drawShape(ctx, shape, x, y, w, h, radius, val, bt) {
       }
       ctx.fill();
       break;
-
     case 'line':
       ctx.beginPath();
       ctx.lineWidth = Math.max(w * 0.4, 1);
@@ -185,13 +177,11 @@ function drawShape(ctx, shape, x, y, w, h, radius, val, bt) {
       ctx.lineTo(x + w / 2, y);
       ctx.stroke();
       break;
-
     case 'hollow':
       ctx.beginPath();
       ctx.lineWidth = bt.stroke_width || 1.5;
       ctx.strokeRect(x, y, w, h);
       break;
-
     case 'triangle':
       ctx.beginPath();
       ctx.moveTo(x + w / 2, y);
@@ -200,14 +190,12 @@ function drawShape(ctx, shape, x, y, w, h, radius, val, bt) {
       ctx.closePath();
       ctx.fill();
       break;
-
     case 'dot':
       const dotR = Math.max(w / 2, 1);
       ctx.beginPath();
       ctx.arc(x + w / 2, y + dotR, dotR, 0, Math.PI * 2);
       ctx.fill();
       break;
-
     case 'diamond':
       ctx.beginPath();
       ctx.moveTo(x + w / 2, y);
@@ -217,7 +205,6 @@ function drawShape(ctx, shape, x, y, w, h, radius, val, bt) {
       ctx.closePath();
       ctx.fill();
       break;
-
     default:
       ctx.fillRect(x, y, w, h);
       break;
