@@ -117,9 +117,9 @@ const BarThemes = (() => {
       corner_radius: 0,
       gap: 4,
       stroke_width: 1,
-      bloom: true,
+      bloom: false,
       bloom_intensity: 0.6,
-      fade: true,
+      fade: false,
       fade_speed: 0.08,
       particles: false,
       particle_count: 20,
@@ -170,7 +170,6 @@ const BarThemes = (() => {
 
   function validate(json) {
     const errors = [];
-
     if (typeof json !== 'object' || json === null) return ['invalid json object'];
     if (!json.name || typeof json.name !== 'string') errors.push('missing or invalid "name" (string)');
     if (json.shape && !VALID_SHAPES.includes(json.shape)) errors.push(`invalid shape "${json.shape}". valid: ${VALID_SHAPES.join(', ')}`);
@@ -179,7 +178,6 @@ const BarThemes = (() => {
     if (json.bloom_intensity !== undefined && (json.bloom_intensity < 0 || json.bloom_intensity > 1)) errors.push('"bloom_intensity" must be 0-1');
     if (json.fade_speed !== undefined && (json.fade_speed < 0 || json.fade_speed > 1)) errors.push('"fade_speed" must be 0-1');
     if (json.particle_count !== undefined && (typeof json.particle_count !== 'number' || json.particle_count < 0)) errors.push('"particle_count" must be a non-negative number');
-
     return errors;
   }
 
@@ -192,19 +190,42 @@ const BarThemes = (() => {
     return merge(all[activeTheme] || builtins.default);
   }
 
+  function resetEffects() {
+    NB.settings.effects = {
+      bloom: false,
+      fade: false,
+      particles: false,
+      space: false
+    };
+    const effectBtns = document.querySelectorAll('.effect-btn');
+    effectBtns.forEach(btn => btn.classList.remove('active'));
+  }
+
   function setTheme(name) {
     const all = Object.assign({}, builtins, customThemes);
     if (!all[name]) return false;
+    
+    resetEffects();
     activeTheme = name;
-
     const theme = current();
 
-    // Apply theme overrides to NB settings if theme specifies them
     if (theme.color_mode) NB.settings.colorMode = theme.color_mode;
     if (theme.fade_speed) NB.settings.fadeSpeed = theme.fade_speed;
     if (theme.bloom_intensity) NB.settings.bloomIntensity = theme.bloom_intensity;
     if (theme.particle_count) NB.settings.particleCount = theme.particle_count;
     if (theme.rainbow_speed) NB.settings.rainbowSpeed = theme.rainbow_speed;
+    
+    if (theme.bloom) NB.settings.effects.bloom = true;
+    if (theme.fade) NB.settings.effects.fade = true;
+    if (theme.particles) NB.settings.effects.particles = true;
+    if (theme.space) NB.settings.effects.space = true;
+    
+    Object.keys(NB.settings.effects).forEach(effect => {
+      if (NB.settings.effects[effect]) {
+        const btn = document.querySelector(`.effect-btn[data-effect="${effect}"]`);
+        if (btn) btn.classList.add('active');
+      }
+    });
 
     Effects.resetTrail();
     return true;
@@ -222,6 +243,7 @@ const BarThemes = (() => {
 
   function addToUI(key, theme) {
     const list = document.getElementById('bartheme-list');
+    if (!list) return;
     if (document.querySelector(`.bartheme-btn[data-theme="${key}"]`)) return;
     const btn = document.createElement('button');
     btn.className = 'bartheme-btn';
@@ -233,7 +255,7 @@ const BarThemes = (() => {
       document.querySelectorAll('.bartheme-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       setTheme(key);
-      setStatus('bar theme: ' + (theme.name || key), '🎨');
+      if (typeof setStatus === 'function') setStatus('bar theme: ' + (theme.name || key), '🎨');
     });
   }
 
@@ -270,6 +292,7 @@ const BarThemes = (() => {
     importTheme,
     addToUI,
     getSchema,
+    resetEffects,
     builtins: () => Object.keys(builtins),
     custom: () => Object.keys(customThemes)
   };
@@ -278,37 +301,41 @@ const BarThemes = (() => {
 window.BarThemes = BarThemes;
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.bartheme-btn').forEach(btn => {
+  const barthemeBtns = document.querySelectorAll('.bartheme-btn');
+  barthemeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.bartheme-btn').forEach(b => b.classList.remove('active'));
+      barthemeBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       BarThemes.setTheme(btn.dataset.theme);
-      setStatus('bar theme: ' + btn.dataset.theme, '🎨');
+      if (typeof setStatus === 'function') setStatus('bar theme: ' + btn.dataset.theme, '🎨');
     });
   });
 
-  document.getElementById('import-bartheme-btn').addEventListener('click', () => {
-    document.getElementById('import-bartheme-input').click();
-  });
-
-  document.getElementById('import-bartheme-input').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setStatus('importing bar theme: ' + file.name, '⏳');
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        const json = JSON.parse(ev.target.result);
-        const key = BarThemes.importTheme(json);
-        BarThemes.addToUI(key, json);
-        setStatus('bar theme imported: ' + json.name, '✅');
-        setTimeout(() => setStatus('ready', '🐱'), 2000);
-      } catch (err) {
-        setStatus('import failed: ' + err.message, '❌');
-        console.error(err);
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  });
+  const importBarthemeBtn = document.getElementById('import-bartheme-btn');
+  const importBarthemeInput = document.getElementById('import-bartheme-input');
+  if (importBarthemeBtn && importBarthemeInput) {
+    importBarthemeBtn.addEventListener('click', () => importBarthemeInput.click());
+    importBarthemeInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (typeof setStatus === 'function') setStatus('importing bar theme: ' + file.name, '⏳');
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const json = JSON.parse(ev.target.result);
+          const key = BarThemes.importTheme(json);
+          BarThemes.addToUI(key, json);
+          if (typeof setStatus === 'function') setStatus('bar theme imported: ' + json.name, '✅');
+          setTimeout(() => {
+            if (typeof setStatus === 'function') setStatus('ready', '🐱');
+          }, 2000);
+        } catch (err) {
+          if (typeof setStatus === 'function') setStatus('import failed: ' + err.message, '❌');
+          console.error(err);
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+  }
 });
