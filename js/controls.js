@@ -2,17 +2,29 @@
   document.addEventListener('DOMContentLoaded', () => {
     const s = NB.settings;
     
-    function syncRangeAndNumber(rangeId, numberId, settingKey) {
+    function toPowerOfTwo(n) {
+      n = Math.max(16, Math.min(16384, n));
+      return Math.pow(2, Math.round(Math.log2(n)));
+    }
+    
+    function syncRangeAndNumber(rangeId, numberId, settingKey, isPowerOfTwo = false, minVal = null, maxVal = null) {
       const range = document.getElementById(rangeId);
       const number = document.getElementById(numberId);
       if (!range || !number) return;
       
+      const min = minVal !== null ? minVal : parseFloat(range.min);
+      const max = maxVal !== null ? maxVal : parseFloat(range.max);
+      
       const update = () => {
         let val = parseFloat(range.value);
+        if (isNaN(val)) val = range.min;
+        if (isPowerOfTwo) val = toPowerOfTwo(val);
+        val = Math.min(max, Math.max(min, val));
         number.value = val;
         s[settingKey] = val;
+        
         if (settingKey === 'barCount' && NB.analyser) {
-          NB.analyser.fftSize = s.barCount * 2;
+          NB.analyser.fftSize = val * 2;
         }
         if (settingKey === 'smoothing' && NB.analyser) {
           NB.analyser.smoothingTimeConstant = s.smoothing;
@@ -20,6 +32,7 @@
         if (settingKey === 'fadeSpeed') {
           Effects.resetTrail();
         }
+        
         const outEl = document.getElementById(settingKey + '-out');
         if (outEl) {
           if (settingKey === 'opacityVal') outEl.textContent = Math.round(s.opacityVal * 100);
@@ -36,14 +49,15 @@
       
       const updateFromNumber = () => {
         let val = parseFloat(number.value);
-        const min = parseFloat(range.min);
-        const max = parseFloat(range.max);
+        if (isNaN(val)) val = range.value;
+        if (isPowerOfTwo) val = toPowerOfTwo(val);
         val = Math.min(max, Math.max(min, val));
         range.value = val;
         number.value = val;
         s[settingKey] = val;
+        
         if (settingKey === 'barCount' && NB.analyser) {
-          NB.analyser.fftSize = s.barCount * 2;
+          NB.analyser.fftSize = val * 2;
         }
         if (settingKey === 'smoothing' && NB.analyser) {
           NB.analyser.smoothingTimeConstant = s.smoothing;
@@ -51,6 +65,7 @@
         if (settingKey === 'fadeSpeed') {
           Effects.resetTrail();
         }
+        
         const outEl = document.getElementById(settingKey + '-out');
         if (outEl) {
           if (settingKey === 'opacityVal') outEl.textContent = Math.round(s.opacityVal * 100);
@@ -67,23 +82,29 @@
       
       range.addEventListener('input', update);
       number.addEventListener('input', updateFromNumber);
-      range.value = s[settingKey];
-      number.value = s[settingKey];
+      
+      let initVal = s[settingKey];
+      if (isPowerOfTwo) initVal = toPowerOfTwo(initVal);
+      range.value = initVal;
+      number.value = initVal;
     }
     
-    syncRangeAndNumber('bar-count', 'bar-count-num', 'barCount');
-    syncRangeAndNumber('height-scale', 'height-scale-num', 'heightScale');
-    syncRangeAndNumber('sensitivity', 'sensitivity-num', 'sensitivity');
-    syncRangeAndNumber('opacity-val', 'opacity-val-num', 'opacityVal');
-    syncRangeAndNumber('smooth-val', 'smooth-val-num', 'smoothing');
-    syncRangeAndNumber('rainbow-speed', 'rainbow-speed-num', 'rainbowSpeed');
-    syncRangeAndNumber('bloom-intensity', 'bloom-intensity-num', 'bloomIntensity');
-    syncRangeAndNumber('fade-speed', 'fade-speed-num', 'fadeSpeed');
-    syncRangeAndNumber('particle-count', 'particle-count-num', 'particleCount');
+    syncRangeAndNumber('bar-count', 'bar-count-num', 'barCount', true, 16, 512);
+    syncRangeAndNumber('height-scale', 'height-scale-num', 'heightScale', false);
+    syncRangeAndNumber('sensitivity', 'sensitivity-num', 'sensitivity', false);
+    syncRangeAndNumber('opacity-val', 'opacity-val-num', 'opacityVal', false, 0, 1);
+    syncRangeAndNumber('smooth-val', 'smooth-val-num', 'smoothing', false, 0, 0.99);
+    syncRangeAndNumber('rainbow-speed', 'rainbow-speed-num', 'rainbowSpeed', false, 0, 10);
+    syncRangeAndNumber('bloom-intensity', 'bloom-intensity-num', 'bloomIntensity', false, 0, 2);
+    syncRangeAndNumber('fade-speed', 'fade-speed-num', 'fadeSpeed', false, 0, 0.5);
+    syncRangeAndNumber('particle-count', 'particle-count-num', 'particleCount', false, 0, 500);
     
-    document.getElementById('bar-color').addEventListener('input', e => s.barColor = e.target.value);
-    document.getElementById('grad-start').addEventListener('input', e => s.gradStart = e.target.value);
-    document.getElementById('grad-end').addEventListener('input', e => s.gradEnd = e.target.value);
+    const barColor = document.getElementById('bar-color');
+    if (barColor) barColor.addEventListener('input', e => s.barColor = e.target.value);
+    const gradStart = document.getElementById('grad-start');
+    if (gradStart) gradStart.addEventListener('input', e => s.gradStart = e.target.value);
+    const gradEnd = document.getElementById('grad-end');
+    if (gradEnd) gradEnd.addEventListener('input', e => s.gradEnd = e.target.value);
     
     document.querySelectorAll('.mode-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -98,8 +119,10 @@
         document.querySelectorAll('.color-mode-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         s.colorMode = btn.dataset.cmode;
-        document.getElementById('solid-color-wrap').style.display = s.colorMode === 'solid' ? 'block' : 'none';
-        document.getElementById('gradient-color-wrap').style.display = (s.colorMode === 'gradient_bar' || s.colorMode === 'gradient_global') ? 'block' : 'none';
+        const solidWrap = document.getElementById('solid-color-wrap');
+        const gradWrap = document.getElementById('gradient-color-wrap');
+        if (solidWrap) solidWrap.style.display = s.colorMode === 'solid' ? 'block' : 'none';
+        if (gradWrap) gradWrap.style.display = (s.colorMode === 'gradient_bar' || s.colorMode === 'gradient_global') ? 'block' : 'none';
       });
     });
     
@@ -112,28 +135,30 @@
     });
     
     function updateEffectControls() {
-      document.getElementById('rainbow-speed-row').style.display = 
-        (s.colorMode === 'rainbow' || s.colorMode === 'rainbow_multi') ? 'flex' : 'none';
-      document.getElementById('bloom-intensity-row').style.display = 
-        (s.effects.bloom || BarThemes.current().bloom) ? 'flex' : 'none';
-      document.getElementById('fade-speed-row').style.display = 
-        (s.effects.fade || BarThemes.current().fade) ? 'flex' : 'none';
-      document.getElementById('particle-count-row').style.display = 
-        (s.effects.particles || BarThemes.current().particles) ? 'flex' : 'none';
+      const rainbowRow = document.getElementById('rainbow-speed-row');
+      const bloomRow = document.getElementById('bloom-intensity-row');
+      const fadeRow = document.getElementById('fade-speed-row');
+      const particleRow = document.getElementById('particle-count-row');
+      if (rainbowRow) rainbowRow.style.display = (s.colorMode === 'rainbow' || s.colorMode === 'rainbow_multi') ? 'flex' : 'none';
+      if (bloomRow) bloomRow.style.display = (s.effects.bloom || (BarThemes.current && BarThemes.current().bloom)) ? 'flex' : 'none';
+      if (fadeRow) fadeRow.style.display = (s.effects.fade || (BarThemes.current && BarThemes.current().fade)) ? 'flex' : 'none';
+      if (particleRow) particleRow.style.display = (s.effects.particles || (BarThemes.current && BarThemes.current().particles)) ? 'flex' : 'none';
     }
     
     updateEffectControls();
     
-    const origSetTheme = BarThemes.setTheme;
-    BarThemes.setTheme = function(name) {
-      origSetTheme(name);
-      updateEffectControls();
-      const theme = BarThemes.current();
-      if (theme.color_mode) {
-        const btn = document.querySelector(`.color-mode-btn[data-cmode="${theme.color_mode}"]`);
-        if (btn) btn.click();
-      }
-    };
+    if (typeof BarThemes !== 'undefined' && BarThemes.setTheme) {
+      const origSetTheme = BarThemes.setTheme;
+      BarThemes.setTheme = function(name) {
+        origSetTheme(name);
+        updateEffectControls();
+        const theme = BarThemes.current();
+        if (theme.color_mode) {
+          const btn = document.querySelector(`.color-mode-btn[data-cmode="${theme.color_mode}"]`);
+          if (btn) btn.click();
+        }
+      };
+    }
     
     setInterval(updateEffectControls, 100);
   });
