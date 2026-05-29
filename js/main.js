@@ -15,7 +15,7 @@ const NB = {
     heightScale: 1.5,
     sensitivity: 1.0,
     opacityVal: 1.0,
-    smoothing: 0.8,
+    smoothing: 0.3,  // CHANGED: was 0.8, now faster like C#
     rainbowSpeed: 1.0,
     bloomIntensity: 0.5,
     fadeSpeed: 0.05,
