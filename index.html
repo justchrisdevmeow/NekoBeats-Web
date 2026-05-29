@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NekoBeats Web</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #00cfd1;
+      --bg: #0a0a0a;
+      --surface: #111;
+      --border: rgba(0, 206, 209, 0.2);
+      --text: #fff;
+      --muted: #b0b0b0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 32px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 4px;
+      text-shadow: 0 0 20px rgba(0,206,209,0.4);
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 24px;
+      letter-spacing: 2px;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    #canvas-wrap {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      background: #050505;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #idle {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #333;
+      font-size: 14px;
+      letter-spacing: 1px;
+      pointer-events: none;
+    }
+
+    #idle svg {
+      width: 40px;
+      height: 40px;
+      stroke: #333;
+      fill: none;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .control-label span {
+      color: var(--primary);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+    }
+
+    .bottom {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .modes {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mode-btn {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 7px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-btn:hover { color: var(--primary); border-color: var(--primary); }
+    .mode-btn.active { color: var(--bg); background: var(--primary); border-color: var(--primary); }
+
+    .color-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input[type="color"] {
+      width: 36px;
+      height: 30px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    .upload-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    #file-btn {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 20px;
+      border: 1px solid var(--primary);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--primary);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    #file-btn:hover { background: var(--primary); color: var(--bg); }
+
+    #file { display: none; }
+
+    #track-name {
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    #progress-wrap {
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 12px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    #progress-bar {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    @media (max-width: 600px) {
+      .controls { grid-template-columns: 1fr; }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrap">
+    <h1>NekoBeats</h1>
+    <div class="subtitle">web audio visualizer</div>
+
+    <div id="canvas-wrap">
+      <canvas id="canvas"></canvas>
+      <div id="idle">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"/>
+          <circle cx="6" cy="18" r="3"/>
+          <circle cx="18" cy="16" r="3"/>
+        </svg>
+        upload a track to begin
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="control-row">
+        <div class="control-label">Bar count <span id="bar-count-out">64</span></div>
+        <input type="range" id="bar-count" min="16" max="256" step="16" value="64">
+      </div>
+      <div class="control-row">
+        <div class="control-label">Height scale <span id="height-out">1.5</span>x</div>
+        <input type="range" id="height-scale" min="0.5" max="4" step="0.1" value="1.5">
+      </div>
+      <div class="control-row">
+        <div class="control-label">Opacity <span id="opacity-out">100</span>%</div>
+        <input type="range" id="opacity-val" min="10" max="100" step="1" value="100">
+      </div>
+      <div class="control-row">
+        <div class="control-label">Smoothing <span id="smooth-out">0.80</span></div>
+        <input type="range" id="smooth-val" min="0" max="0.95" step="0.05" value="0.8">
+      </div>
+    </div>
+
+    <div class="bottom">
+      <div class="modes">
+        <button class="mode-btn active" data-mode="bars">bars</button>
+        <button class="mode-btn" data-mode="wave">wave</button>
+        <button class="mode-btn" data-mode="mirror">mirror</button>
+        <button class="mode-btn" data-mode="circle">circle</button>
+      </div>
+      <div class="color-wrap">
+        color
+        <input type="color" id="nb-color" value="#00cfd1">
+      </div>
+    </div>
+
+    <div class="upload-row">
+      <button id="file-btn">upload track</button>
+      <input type="file" id="file" accept="audio/*">
+      <span id="track-name">no track loaded</span>
+    </div>
+
+    <div id="progress-wrap">
+      <div id="progress-bar"></div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const idle = document.getElementById('idle');
+    const progressBar = document.getElementById('progress-bar');
+
+    let audioCtx, analyser, source, buffer, animId;
+    let startTime = 0, startOffset = 0;
+    let barCount = 64, heightScale = 1.5, opacityVal = 1, smoothing = 0.8;
+    let barColor = '#00cfd1', mode = 'bars';
+    let playing = false;
+
+    function resize() {
+      const wrap = document.getElementById('canvas-wrap');
+      canvas.width = wrap.clientWidth;
+      canvas.height = wrap.clientHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    document.getElementById('bar-count').addEventListener('input', e => {
+      barCount = parseInt(e.target.value);
+      document.getElementById('bar-count-out').textContent = barCount;
+      if (analyser) analyser.fftSize = barCount * 2;
+    });
+    document.getElementById('height-scale').addEventListener('input', e => {
+      heightScale = parseFloat(e.target.value);
+      document.getElementById('height-out').textContent = heightScale.toFixed(1);
+    });
+    document.getElementById('opacity-val').addEventListener('input', e => {
+      opacityVal = parseInt(e.target.value) / 100;
+      document.getElementById('opacity-out').textContent = e.target.value;
+    });
+    document.getElementById('smooth-val').addEventListener('input', e => {
+      smoothing = parseFloat(e.target.value);
+      document.getElementById('smooth-out').textContent = smoothing.toFixed(2);
+      if (analyser) analyser.smoothingTimeConstant = smoothing;
+    });
+    document.getElementById('nb-color').addEventListener('input', e => { barColor = e.target.value; });
+
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        mode = btn.dataset.mode;
+      });
+    });
+
+    document.getElementById('file-btn').addEventListener('click', () => document.getElementById('file').click());
+    document.getElementById('file').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      document.getElementById('track-name').textContent = file.name;
+      idle.style.display = 'none';
+      load(file);
+    });
+
+    function load(file) {
+      if (source) { source.stop(); cancelAnimationFrame(animId); }
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const reader = new FileReader();
+      reader.onload = ev => {
+        audioCtx.decodeAudioData(ev.target.result, buf => {
+          buffer = buf;
+          play(0);
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function play(offset) {
+      if (source) { source.disconnect(); }
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = barCount * 2;
+      analyser.smoothingTimeConstant = smoothing;
+      source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(analyser);
+      analyser.connect(audioCtx.destination);
+      startOffset = offset;
+      startTime = audioCtx.currentTime;
+      source.start(0, offset);
+      playing = true;
+      source.onended = () => {
+        playing = false;
+        idle.style.display = 'flex';
+        progressBar.style.width = '0%';
+      };
+      draw();
+    }
+
+    document.getElementById('progress-wrap').addEventListener('click', e => {
+      if (!buffer) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const ratio = (e.clientX - rect.left) / rect.width;
+      const seekTime = ratio * buffer.duration;
+      play(seekTime);
+    });
+
+    function hexToRgb(hex) {
+      const r = parseInt(hex.slice(1,3), 16);
+      const g = parseInt(hex.slice(3,5), 16);
+      const b = parseInt(hex.slice(5,7), 16);
+      return `${r},${g},${b}`;
+    }
+
+    function draw() {
+      animId = requestAnimationFrame(draw);
+      if (!analyser) return;
+
+      if (playing && buffer) {
+        const elapsed = audioCtx.currentTime - startTime + startOffset;
+        progressBar.style.width = Math.min((elapsed / buffer.duration) * 100, 100) + '%';
+      }
+
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      const rgb = hexToRgb(barColor);
+
+      if (mode === 'wave') {
+        const data = new Uint8Array(analyser.fftSize);
+        analyser.getByteTimeDomainData(data);
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(${rgb},${opacityVal})`;
+        ctx.lineWidth = 2;
+        const step = W / data.length;
+        for (let i = 0; i < data.length; i++) {
+          const y = (data[i] / 128.0) * (H / 2);
+          i === 0 ? ctx.moveTo(0, y) : ctx.lineTo(i * step, y);
+        }
+        ctx.stroke();
+        return;
+      }
+
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(data);
+
+      if (mode === 'circle') {
+        const cx = W / 2, cy = H / 2;
+        const radius = Math.min(W, H) * 0.25;
+        const count = barCount;
+        for (let i = 0; i < count; i++) {
+          const val = data[i] / 255;
+          const angle = (i / count) * Math.PI * 2 - Math.PI / 2;
+          const len = val * radius * heightScale;
+          const x1 = cx + Math.cos(angle) * radius;
+          const y1 = cy + Math.sin(angle) * radius;
+          const x2 = cx + Math.cos(angle) * (radius + len);
+          const y2 = cy + Math.sin(angle) * (radius + len);
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(${rgb},${opacityVal * (0.3 + val * 0.7)})`;
+          ctx.lineWidth = 2;
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+        return;
+      }
+
+      const count = barCount;
+      const gap = 2;
+      const barW = (W - gap * (count - 1)) / count;
+
+      for (let i = 0; i < count; i++) {
+        const val = data[i] / 255;
+        const barH = Math.max(val * H * heightScale, 1);
+        const x = i * (barW + gap);
+
+        if (mode === 'mirror') {
+          const y = H / 2 - barH / 2;
+          ctx.fillStyle = `rgba(${rgb},${opacityVal})`;
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(x, y, barW, barH, 2);
+          else ctx.rect(x, y, barW, barH);
+          ctx.fill();
+        } else {
+          const y = H - barH;
+          ctx.fillStyle = `rgba(${rgb},${opacityVal * (0.4 + val * 0.6)})`;
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(x, y, barW, barH, 2);
+          else ctx.rect(x, y, barW, barH);
+          ctx.fill();
+        }
+      }
+    }
+  </script>
+</body>
+</html>
