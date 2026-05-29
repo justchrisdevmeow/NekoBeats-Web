@@ -36,6 +36,7 @@ const NB = {
 };
 
 window.NB = NB;
+window.isRecording = false;
 
 function setStatus(text, icon) {
   const statusText = document.getElementById('status-text');
@@ -71,6 +72,7 @@ function play(offset) {
   if (NB.source) {
     try { NB.source.stop(); } catch(e) {}
     NB.source.disconnect();
+    NB.source = null;
   }
 
   initAudioCtx();
@@ -94,17 +96,22 @@ function play(offset) {
     return;
   }
 
-  const idleScreen = document.getElementById('idle-screen');
-  if (idleScreen) idleScreen.style.display = 'none';
+  if (!window.isRecording) {
+    const idleScreen = document.getElementById('idle-screen');
+    if (idleScreen) idleScreen.style.display = 'none';
+  }
   setStatus('playing: ' + (document.getElementById('track-name')?.textContent || 'track'), '▶');
 
   const playPauseBtn = document.getElementById('play-pause-btn');
   if (playPauseBtn) playPauseBtn.textContent = '⏸';
 
   NB.source.onended = () => {
-    if (!NB.loop && NB.pausedAt === 0) {
+    if (!NB.loop && NB.pausedAt === 0 && NB.playing) {
       NB.playing = false;
-      if (idleScreen) idleScreen.style.display = 'flex';
+      if (!window.isRecording) {
+        const idleScreen = document.getElementById('idle-screen');
+        if (idleScreen) idleScreen.style.display = 'flex';
+      }
       const progressBar = document.getElementById('progress-bar');
       if (progressBar) progressBar.style.width = '0%';
       const timeCurrent = document.getElementById('time-current');
@@ -223,20 +230,21 @@ async function startRecording() {
   
   setStatus(`Exporting: ${trackName}`, '📹');
   
-  // Update button style
   const exportBtn = document.getElementById('export-video-btn');
   if (exportBtn) {
     exportBtn.classList.add('recording');
     exportBtn.textContent = 'recording...';
   }
   
+  window.isRecording = true;
+  
   // Save original canvas size
   originalCanvasSize.width = canvas.width;
   originalCanvasSize.height = canvas.height;
   
-  // Resize canvas to fullscreen
-  canvas.width = wrap.clientWidth;
-  canvas.height = wrap.clientHeight;
+  // Resize to FULL WINDOW
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 32;
   
   // Force redraw
   if (NB.analyser) draw();
@@ -300,6 +308,7 @@ async function startRecording() {
     if (recordingStream) recordingStream.getTracks().forEach(t => t.stop());
     NB.analyser.disconnect(dest);
     isRecording = false;
+    window.isRecording = false;
     
     // Reset button
     if (exportBtn) {
