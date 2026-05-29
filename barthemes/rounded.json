@@ -1,0 +1,21 @@
+{
+  "name": "rounded",
+  "shape": "rounded",
+  "width_multiplier": 0.85,
+  "corner_radius": 6,
+  "gap": 3,
+  "stroke_width": 1.5,
+  "bloom": false,
+  "bloom_intensity": 0.4,
+  "fade": false,
+  "fade_speed": 0.05,
+  "particles": false,
+  "particle_count": 30,
+  "particle_size": 2,
+  "particle_speed": 1,
+  "space": false,
+  "color_mode": null,
+  "gradient_start": null,
+  "gradient_end": null,
+  "rainbow_speed": 1
+}
