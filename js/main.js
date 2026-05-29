@@ -84,9 +84,15 @@ function play(offset) {
 
   NB.startOffset = offset;
   NB.startTime = NB.audioCtx.currentTime;
-  NB.source.start(0, offset);
-  NB.playing = true;
-  NB.pausedAt = 0;
+  
+  try {
+    NB.source.start(0, offset);
+    NB.playing = true;
+    NB.pausedAt = 0;
+  } catch(e) {
+    console.error('Play failed:', e);
+    return;
+  }
 
   const idleScreen = document.getElementById('idle-screen');
   if (idleScreen) idleScreen.style.display = 'none';
@@ -96,7 +102,7 @@ function play(offset) {
   if (playPauseBtn) playPauseBtn.textContent = '⏸';
 
   NB.source.onended = () => {
-    if (!NB.loop && !NB.pausedAt) {
+    if (!NB.loop && NB.pausedAt === 0) {
       NB.playing = false;
       if (idleScreen) idleScreen.style.display = 'flex';
       const progressBar = document.getElementById('progress-bar');
@@ -118,7 +124,11 @@ function pause() {
   
   const elapsed = NB.audioCtx.currentTime - NB.startTime + NB.startOffset;
   NB.pausedAt = Math.min(elapsed, NB.buffer.duration);
-  NB.source.stop();
+  
+  try {
+    NB.source.stop();
+  } catch(e) {}
+  
   NB.playing = false;
   setStatus('paused', '⏸');
   const playPauseBtn = document.getElementById('play-pause-btn');
@@ -196,9 +206,11 @@ let recordingStream = null;
 let canvasStream = null;
 let audioStream = null;
 let isRecording = false;
+let originalCanvasSize = { width: 0, height: 0 };
 
 async function startRecording() {
   const canvas = document.getElementById('canvas');
+  const wrap = document.getElementById('canvas-wrap');
   const audioCtx = NB.audioCtx;
   
   if (!NB.buffer) {
@@ -206,10 +218,27 @@ async function startRecording() {
     return;
   }
   
-  // Pause and seek to 0
+  // Save original canvas size
+  originalCanvasSize.width = canvas.width;
+  originalCanvasSize.height = canvas.height;
+  
+  // Resize canvas to fullscreen
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  
+  // Force redraw at new size
+  if (NB.analyser) draw();
+  
+  // Save current playback position
+  let currentPos = 0;
   if (NB.playing) {
+    currentPos = NB.audioCtx.currentTime - NB.startTime + NB.startOffset;
     pause();
+  } else if (NB.pausedAt > 0) {
+    currentPos = NB.pausedAt;
   }
+  
+  // Seek to 0 for recording
   play(0);
   
   // Wait for audio to start
@@ -249,6 +278,11 @@ async function startRecording() {
     a.click();
     URL.revokeObjectURL(url);
     setStatus('Video saved', '💾');
+    
+    // Restore original canvas size
+    canvas.width = originalCanvasSize.width;
+    canvas.height = originalCanvasSize.height;
+    draw();
     
     // Cleanup
     if (recordingStream) recordingStream.getTracks().forEach(t => t.stop());
