@@ -159,7 +159,7 @@
         }
       };
     }
-    
+    // force update ignore this comment
     setInterval(updateEffectControls, 100);
   });
 })();
