@@ -4,7 +4,6 @@ const Effects = (() => {
   let rainbowHue = 0;
   let starsInit = false;
 
-  // ── Rainbow ──
   function getRainbowColor(offset, alpha) {
     rainbowHue = (rainbowHue + NB.settings.rainbowSpeed * 0.5) % 360;
     const h = (rainbowHue + offset) % 360;
@@ -20,7 +19,6 @@ const Effects = (() => {
     rainbowHue = (rainbowHue + NB.settings.rainbowSpeed * 0.5) % 360;
   }
 
-  // ── Gradient ──
   function getBarGradient(ctx, x, y, w, h, startHex, endHex) {
     const grad = ctx.createLinearGradient(x, y + h, x, y);
     grad.addColorStop(0, startHex);
@@ -35,7 +33,6 @@ const Effects = (() => {
     return grad;
   }
 
-  // ── Resolve bar color ──
   function resolveColor(ctx, index, total, x, barW, barH, canvasW, canvasH, baseAlpha) {
     const s = NB.settings;
     const alpha = s.opacityVal * baseAlpha;
@@ -54,7 +51,6 @@ const Effects = (() => {
     }
   }
 
-  // ── Bloom (fixed) ──
   function applyBloom(ctx, canvas) {
     const intensity = NB.settings.bloomIntensity;
     if (intensity <= 0) return;
@@ -69,14 +65,12 @@ const Effects = (() => {
     ctx.restore();
   }
 
-  // ── Fade (fixed - simple trail) ──
   function applyFade(ctx, canvas) {
     const speed = NB.settings.fadeSpeed;
     ctx.fillStyle = `rgba(0, 0, 0, ${speed * 0.6})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // ── Particles ──
   function spawnParticle(x, y, color) {
     particles.push({
       x, y,
@@ -122,7 +116,6 @@ const Effects = (() => {
     }
   }
 
-  // ── Space background ──
   function initStars(W, H) {
     stars.length = 0;
     for (let i = 0; i < 120; i++) {
@@ -169,7 +162,6 @@ const Effects = (() => {
     ctx.restore();
   }
 
-  // ── Helpers ──
   function hexAlpha(hex, alpha) {
     const r = parseInt(hex.slice(1,3), 16);
     const g = parseInt(hex.slice(3,5), 16);
@@ -177,9 +169,7 @@ const Effects = (() => {
     return `rgba(${r},${g},${b},${alpha})`;
   }
 
-  function resetTrail() {
-    // Nothing to reset now
-  }
+  function resetTrail() {}
 
   return {
     resolveColor,
