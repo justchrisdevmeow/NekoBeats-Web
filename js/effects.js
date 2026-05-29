@@ -56,8 +56,8 @@ const Effects = (() => {
     if (intensity <= 0) return;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    ctx.filter = `blur(${Math.round(intensity * 6)}px)`;
-    ctx.globalAlpha = intensity * 0.3;
+    ctx.filter = `blur(${Math.round(intensity * 2)}px)`;
+    ctx.globalAlpha = intensity * 0.1;
     ctx.drawImage(canvas, 0, 0);
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
@@ -68,7 +68,7 @@ const Effects = (() => {
   function applyFade(ctx, canvas) {
     const speed = NB.settings.fadeSpeed;
     if (speed <= 0) return;
-    ctx.fillStyle = `rgba(0, 0, 0, ${speed * 0.3})`;
+    ctx.fillStyle = `rgba(0, 0, 0, ${speed * 0.08})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
@@ -172,7 +172,6 @@ const Effects = (() => {
   }
 
   function resetTrail() {
-    // Clear particles on theme change
     particles.length = 0;
   }
 
