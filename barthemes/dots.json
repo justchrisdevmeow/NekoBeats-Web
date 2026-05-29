@@ -1,0 +1,21 @@
+{
+  "name": "dots",
+  "shape": "dot",
+  "width_multiplier": 0.7,
+  "corner_radius": 0,
+  "gap": 4,
+  "stroke_width": 1,
+  "bloom": true,
+  "bloom_intensity": 0.6,
+  "fade": true,
+  "fade_speed": 0.08,
+  "particles": false,
+  "particle_count": 20,
+  "particle_size": 3,
+  "particle_speed": 0.8,
+  "space": false,
+  "color_mode": null,
+  "gradient_start": null,
+  "gradient_end": null,
+  "rainbow_speed": 1
+}
