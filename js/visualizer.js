@@ -22,7 +22,6 @@ function draw() {
   const s = NB.settings;
   const bt = BarThemes.current();
 
-  // Background
   if (s.effects.space || bt.space) {
     Effects.drawSpace(ctx, W, H);
   } else if (!(s.effects.fade || bt.fade)) {
@@ -58,11 +57,11 @@ function draw() {
     Effects.updateParticles(ctx, data, barW, gap, H, count);
   }
 
-  if ((s.effects.bloom || bt.bloom) && !(s.effects.space || bt.space)) {
+  if (s.effects.bloom || bt.bloom) {
     Effects.applyBloom(ctx, canvas);
   }
 
-  if ((s.effects.fade || bt.fade) && !(s.effects.space || bt.space)) {
+  if (s.effects.fade || bt.fade) {
     Effects.applyFade(ctx, canvas);
   }
 }
