@@ -256,7 +256,7 @@ async function startRecording() {
     currentPos = NB.pausedAt;
   }
   
-  play(0);
+  play(currentPos);
   
   await new Promise(r => setTimeout(r, 100));
   
@@ -295,6 +295,9 @@ async function startRecording() {
     canvas.width = originalCanvasSize.width;
     canvas.height = originalCanvasSize.height;
     draw();
+    
+    window.isRecording = false;
+    isRecording = false;
     
     if (recordingStream) recordingStream.getTracks().forEach(t => t.stop());
     NB.analyser.disconnect(dest);
