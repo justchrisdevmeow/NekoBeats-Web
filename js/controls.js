@@ -96,7 +96,7 @@
     syncRangeAndNumber('smooth-val', 'smooth-val-num', 'smoothing', false, 0, 0.99);
     syncRangeAndNumber('rainbow-speed', 'rainbow-speed-num', 'rainbowSpeed', false, 0, 10);
     syncRangeAndNumber('bloom-intensity', 'bloom-intensity-num', 'bloomIntensity', false, 0, 2);
-    syncRangeAndNumber('fade-speed', 'fade-speed-num', 'fadeSpeed', false, 0, 0.5);
+    syncRangeAndNumber('fade-speed', 'fade-speed-num', 'fadeSpeed', false, 0, 1);
     syncRangeAndNumber('particle-count', 'particle-count-num', 'particleCount', false, 0, 500);
     
     const barColor = document.getElementById('bar-color');
@@ -123,13 +123,38 @@
         const gradWrap = document.getElementById('gradient-color-wrap');
         if (solidWrap) solidWrap.style.display = s.colorMode === 'solid' ? 'block' : 'none';
         if (gradWrap) gradWrap.style.display = (s.colorMode === 'gradient_bar' || s.colorMode === 'gradient_global') ? 'block' : 'none';
+        
+        // Update rainbow speed slider max based on color mode
+        const rainbowSpeedSlider = document.getElementById('rainbow-speed');
+        if (rainbowSpeedSlider) {
+          if (s.colorMode === 'rainbow_multi') {
+            rainbowSpeedSlider.max = 10;
+          } else {
+            rainbowSpeedSlider.max = 1;
+          }
+        }
       });
     });
+    
+    // 3D mode toggle
+    const mode3DBtn = document.getElementById('3d-mode-toggle');
+    if (mode3DBtn) {
+      mode3DBtn.addEventListener('click', () => {
+        s.is3D = !s.is3D;
+        mode3DBtn.classList.toggle('active');
+      });
+    }
     
     document.querySelectorAll('.effect-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const effect = btn.dataset.effect;
-        s.effects[effect] = !s.effects[effect];
+        if (effect in s.effects) {
+          // Regular effects (bloom, fade, particles, space)
+          s.effects[effect] = !s.effects[effect];
+        } else if (effect in s) {
+          // Sound-reactive effects and other boolean settings
+          s[effect] = !s[effect];
+        }
         btn.classList.toggle('active');
       });
     });
