@@ -90,9 +90,9 @@ const Effects = (() => {
     const barCount = s.barCount;
 
     for (let i = 0; i < barCount; i++) {
-      if (particles.length < maxParticles && Math.random() < 0.25) {
+      if (particles.length < maxParticles && Math.random() < 0.5) {
         const val = data[i] / 255;
-        if (val > 0.5) {
+        if (val > 0.2) {
           const x = i * (barW + gap) + barW / 2;
           const barH = val * canvasH * s.heightScale;
           const y = canvasH - barH;
