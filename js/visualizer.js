@@ -37,6 +37,12 @@ function draw() {
   NB.animId = requestAnimationFrame(draw);
   if (!NB.analyser) return;
 
+  // Check if 3D mode is enabled
+  if (NB.settings.is3D && typeof Visualizer3D !== 'undefined') {
+    Visualizer3D.render();
+    return;
+  }
+
   updateProgress();
 
   // Update current lyric
@@ -68,6 +74,16 @@ function draw() {
   if (!fadeActive) {
     ctx.clearRect(0, 0, W, H);
   }
+  
+  // Draw custom background if uploaded
+  if (s.customBackground) {
+    const bgImg = new Image();
+    bgImg.onload = () => {
+      ctx.drawImage(bgImg, 0, 0, W, H);
+    };
+    bgImg.src = s.customBackground;
+  }
+  
   if (spaceActive) {
     Effects.drawSpace(ctx, W, H);
   }
@@ -99,6 +115,17 @@ function draw() {
     const gap = bt.gap !== undefined ? bt.gap : 2;
     const barW = (W - gap * (count - 1)) / count;
     Effects.updateParticles(ctx, data, barW, gap, H, count);
+  }
+
+  // Apply sound-reactive effects
+  if (s.soundReactiveGlow) {
+    Effects.applyGlowPulse(ctx, data, freqData);
+  }
+  if (s.soundReactiveColorShift) {
+    Effects.applyColorShift(ctx, data, freqData);
+  }
+  if (s.soundReactiveBurst) {
+    Effects.applyParticleBurst(ctx, data, freqData, W, H);
   }
 
   // Don't mix bloom and fade - they cause smearing
