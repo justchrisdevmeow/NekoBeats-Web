@@ -136,15 +136,6 @@
       });
     });
     
-    // 3D mode toggle
-    const mode3DBtn = document.getElementById('3d-mode-toggle');
-    if (mode3DBtn) {
-      mode3DBtn.addEventListener('click', () => {
-        s.is3D = !s.is3D;
-        mode3DBtn.classList.toggle('active');
-      });
-    }
-    
     document.querySelectorAll('.effect-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const effect = btn.dataset.effect;
