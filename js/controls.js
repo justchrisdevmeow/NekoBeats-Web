@@ -142,6 +142,13 @@
       mode3DBtn.addEventListener('click', () => {
         s.is3D = !s.is3D;
         mode3DBtn.classList.toggle('active');
+        
+        // Clear canvas when toggling 3D
+        const canvas = document.getElementById('canvas');
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
       });
     }
     
