@@ -101,7 +101,8 @@ function draw() {
     Effects.applyBloom(ctx, canvas);
   }
 
-  if (s.effects.fade || bt.fade) {
+  // Skip fade if bloom is active (they conflict and cause smearing)
+  if ((s.effects.fade || bt.fade) && !(s.effects.bloom || bt.bloom)) {
     Effects.applyFade(ctx, canvas);
   }
 
