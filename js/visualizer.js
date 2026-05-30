@@ -24,7 +24,7 @@ function drawWatermark(ctx, W, H) {
   ctx.fillText('🐱', padding, padding);
   
   // Text next to emoji (shorter version)
-  ctx.fillText('NekoBeats', padding + 22, padding);
+  ctx.fillText('Made with NekoBeats', padding + 22, padding);
   
   // URL below (shorter)
   ctx.font = `${Math.max(9, baseSize - 2)}px monospace`;
