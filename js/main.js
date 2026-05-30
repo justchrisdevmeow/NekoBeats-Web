@@ -30,7 +30,6 @@ const NB = {
     barColor: '#00cfd1',
     gradStart: '#00cfd1',
     gradEnd: '#ff006e',
-    is3D: false,
     customBackground: null,
     soundReactiveGlow: false,
     soundReactiveColorShift: false,
