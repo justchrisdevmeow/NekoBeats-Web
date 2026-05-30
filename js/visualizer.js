@@ -62,11 +62,14 @@ function draw() {
   const s = NB.settings;
   const bt = BarThemes.current();
 
-  if (s.effects.space || bt.space) {
+  const fadeActive = s.effects.fade || bt.fade;
+  const spaceActive = s.effects.space || bt.space;
+
+  if (!fadeActive) {
     ctx.clearRect(0, 0, W, H);
+  }
+  if (spaceActive) {
     Effects.drawSpace(ctx, W, H);
-  } else if (!(s.effects.fade || bt.fade)) {
-    ctx.clearRect(0, 0, W, H);
   }
 
   if (s.colorMode === 'rainbow' || s.colorMode === 'rainbow_multi') {
@@ -103,7 +106,7 @@ function draw() {
   }
 
   // Skip fade if bloom is active (they conflict and cause smearing)
-  if ((s.effects.fade || bt.fade) && !(s.effects.bloom || bt.bloom)) {
+  if (fadeActive && !(s.effects.bloom || bt.bloom)) {
     Effects.applyFade(ctx, canvas);
   }
 
@@ -121,20 +124,14 @@ window.draw = draw;
 function drawLyrics(ctx, W, H, lyricText) {
   const baseSize = Math.max(16, Math.min(W, H) * 0.045);
   const fadeInDuration = 200;   // ms
-  const stayDuration = 2500;    // ms
-  const fadeOutDuration = 200;  // ms
-  const totalDuration = fadeInDuration + stayDuration + fadeOutDuration;
   
   const timeSinceChange = Date.now() - NB.lyricChangedAt;
-  const cycleTime = timeSinceChange % totalDuration;
   
   let alpha = 0;
-  if (cycleTime < fadeInDuration) {
-    alpha = cycleTime / fadeInDuration;
-  } else if (cycleTime < fadeInDuration + stayDuration) {
-    alpha = 1;
+  if (timeSinceChange < fadeInDuration) {
+    alpha = timeSinceChange / fadeInDuration;
   } else {
-    alpha = 1 - ((cycleTime - fadeInDuration - stayDuration) / fadeOutDuration);
+    alpha = 1;
   }
   
   alpha = Math.max(0, Math.min(1, alpha));
