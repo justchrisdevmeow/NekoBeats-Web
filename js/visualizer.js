@@ -24,7 +24,7 @@ function drawWatermark(ctx, W, H) {
   ctx.fillText('🐱', padding, padding);
   
   // Text next to emoji (shorter version)
-  ctx.fillText('Made with NekoBeats', padding + 22, padding);
+  ctx.fillText('NekoBeats', padding + 22, padding);
   
   // URL below (shorter)
   ctx.font = `${Math.max(9, baseSize - 2)}px monospace`;
@@ -42,9 +42,17 @@ function draw() {
   // Update current lyric
   if (NB.buffer && NB.playing) {
     const elapsed = NB.audioCtx.currentTime - NB.startTime + NB.startOffset;
-    NB.currentLyric = getCurrentLyric(elapsed);
+    const newLyric = getCurrentLyric(elapsed);
+    if (newLyric !== NB.currentLyric) {
+      NB.currentLyric = newLyric;
+      NB.lyricChangedAt = Date.now();
+    }
   } else if (NB.pausedAt > 0) {
-    NB.currentLyric = getCurrentLyric(NB.pausedAt);
+    const newLyric = getCurrentLyric(NB.pausedAt);
+    if (newLyric !== NB.currentLyric) {
+      NB.currentLyric = newLyric;
+      NB.lyricChangedAt = Date.now();
+    }
   }
 
   const canvas = document.getElementById('canvas');
@@ -110,29 +118,52 @@ window.draw = draw;
 
 function drawLyrics(ctx, W, H, lyricText) {
   const baseSize = Math.max(16, Math.min(W, H) * 0.045);
+  const fadeInDuration = 200;   // ms
+  const stayDuration = 2500;    // ms
+  const fadeOutDuration = 200;  // ms
+  const totalDuration = fadeInDuration + stayDuration + fadeOutDuration;
   
-  ctx.save();
-  ctx.font = `${baseSize}px monospace`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  const timeSinceChange = Date.now() - NB.lyricChangedAt;
+  const cycleTime = timeSinceChange % totalDuration;
   
-  // Background box
+  let alpha = 0;
+  if (cycleTime < fadeInDuration) {
+    alpha = cycleTime / fadeInDuration;
+  } else if (cycleTime < fadeInDuration + stayDuration) {
+    alpha = 1;
+  } else {
+    alpha = 1 - ((cycleTime - fadeInDuration - stayDuration) / fadeOutDuration);
+  }
+  
+  alpha = Math.max(0, Math.min(1, alpha));
+  
   const padding = 20;
   const lineHeight = baseSize + 8;
   const boxWidth = W - padding * 2;
   const boxHeight = lineHeight + padding;
   const boxY = H * 0.7;
   
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+  ctx.save();
+  ctx.font = `${baseSize}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  // Background box with fade
+  ctx.fillStyle = `rgba(0, 0, 0, ${0.7 * alpha})`;
   ctx.beginPath();
-  ctx.roundRect ? ctx.roundRect((W - boxWidth) / 2, boxY, boxWidth, boxHeight, 8) : ctx.rect((W - boxWidth) / 2, boxY, boxWidth, boxHeight);
+  if (ctx.roundRect) {
+    ctx.roundRect((W - boxWidth) / 2, boxY, boxWidth, boxHeight, 8);
+  } else {
+    ctx.rect((W - boxWidth) / 2, boxY, boxWidth, boxHeight);
+  }
   ctx.fill();
   
-  // Lyric text with glow
-  ctx.shadowColor = 'rgba(0, 207, 209, 0.6)';
+  // Lyric text with glow and fade
+  ctx.shadowColor = `rgba(0, 207, 209, ${0.6 * alpha})`;
   ctx.shadowBlur = 10;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 0;
+  ctx.globalAlpha = alpha;
   
   ctx.fillStyle = '#00cfd1';
   ctx.fillText(lyricText, W / 2, boxY + boxHeight / 2);
