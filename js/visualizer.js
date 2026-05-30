@@ -37,12 +37,6 @@ function draw() {
   NB.animId = requestAnimationFrame(draw);
   if (!NB.analyser) return;
 
-  // Check for 3D mode first
-  if (NB.settings.is3D && typeof Visualizer3D !== 'undefined') {
-    Visualizer3D.render();
-    return;
-  }
-
   updateProgress();
 
   const canvas = document.getElementById('canvas');
