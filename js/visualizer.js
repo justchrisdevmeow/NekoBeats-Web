@@ -76,12 +76,8 @@ function draw() {
   }
   
   // Draw custom background if uploaded
-  if (s.customBackground) {
-    const bgImg = new Image();
-    bgImg.onload = () => {
-      ctx.drawImage(bgImg, 0, 0, W, H);
-    };
-    bgImg.src = s.customBackground;
+  if (s.customBackground && NB.cachedBackgroundImage) {
+    ctx.drawImage(NB.cachedBackgroundImage, 0, 0, W, H);
   }
   
   if (spaceActive) {
@@ -118,14 +114,16 @@ function draw() {
   }
 
   // Apply sound-reactive effects
-  if (s.soundReactiveGlow) {
-    Effects.applyGlowPulse(ctx, data, freqData);
-  }
-  if (s.soundReactiveColorShift) {
-    Effects.applyColorShift(ctx, data, freqData);
-  }
-  if (s.soundReactiveBurst) {
-    Effects.applyParticleBurst(ctx, data, freqData, W, H);
+  if (typeof Effects !== 'undefined') {
+    if (s.soundReactiveGlow) {
+      Effects.applyGlowPulse(ctx, data, freqData);
+    }
+    if (s.soundReactiveColorShift) {
+      Effects.applyColorShift(ctx, data, freqData);
+    }
+    if (s.soundReactiveBurst) {
+      Effects.applyParticleBurst(ctx, data, freqData, W, H);
+    }
   }
 
   // Don't mix bloom and fade - they cause smearing
