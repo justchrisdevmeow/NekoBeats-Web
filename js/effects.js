@@ -164,11 +164,66 @@ const Effects = (() => {
     ctx.restore();
   }
 
-  function hexAlpha(hex, alpha) {
-    const r = parseInt(hex.slice(1,3), 16);
-    const g = parseInt(hex.slice(3,5), 16);
-    const b = parseInt(hex.slice(5,7), 16);
-    return `rgba(${r},${g},${b},${alpha})`;
+  function applyGlowPulse(ctx, data, freqData) {
+    // Get average of bass frequencies (first 20%)
+    const bassRange = Math.floor(freqData.length * 0.2);
+    let bassAvg = 0;
+    for (let i = 0; i < bassRange; i++) {
+      bassAvg += freqData[i];
+    }
+    bassAvg /= bassRange;
+    
+    // Normalize to 0-1
+    const bassNorm = Math.min(1, bassAvg / 255);
+    
+    // Apply glow based on bass intensity
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = bassNorm * 0.3;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.restore();
+  }
+
+  function applyColorShift(ctx, data, freqData) {
+    // Get average frequency across spectrum
+    let avgFreq = 0;
+    for (let i = 0; i < freqData.length; i++) {
+      avgFreq += freqData[i];
+    }
+    avgFreq /= freqData.length;
+    
+    // Map frequency to hue (0-360)
+    const hue = (avgFreq / 255) * 360;
+    
+    // Apply subtle color tint
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = 0.05;
+    ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.restore();
+  }
+
+  function applyParticleBurst(ctx, data, freqData, canvasW, canvasH) {
+    // Detect beat in bass frequencies
+    let bassEnergy = 0;
+    const bassRange = Math.floor(freqData.length * 0.15);
+    for (let i = 0; i < bassRange; i++) {
+      bassEnergy += freqData[i];
+    }
+    bassEnergy /= bassRange;
+    
+    // Burst if beat detected (high bass energy)
+    if (bassEnergy > 180) {
+      const burstCount = Math.floor((bassEnergy / 255) * 8);
+      for (let i = 0; i < burstCount; i++) {
+        const x = Math.random() * canvasW;
+        const y = Math.random() * canvasH;
+        const color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        spawnParticle(x, y, color);
+      }
+    }
   }
 
   function resetTrail() {
@@ -179,6 +234,9 @@ const Effects = (() => {
     resolveColor,
     applyBloom,
     applyFade,
+    applyGlowPulse,
+    applyColorShift,
+    applyParticleBurst,
     updateParticles,
     drawSpace,
     tickRainbow,
