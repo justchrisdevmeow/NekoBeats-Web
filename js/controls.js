@@ -23,6 +23,11 @@
         number.value = val;
         s[settingKey] = val;
         
+        // Record macro event
+        if (typeof Macro !== 'undefined') {
+          Macro.recordEvent(settingKey, val);
+        }
+        
         if (settingKey === 'barCount' && NB.analyser) {
           NB.analyser.fftSize = val * 2;
         }
@@ -55,6 +60,11 @@
         range.value = val;
         number.value = val;
         s[settingKey] = val;
+        
+        // Record macro event
+        if (typeof Macro !== 'undefined') {
+          Macro.recordEvent(settingKey, val);
+        }
         
         if (settingKey === 'barCount' && NB.analyser) {
           NB.analyser.fftSize = val * 2;
@@ -142,9 +152,17 @@
         if (effect in s.effects) {
           // Regular effects (bloom, fade, particles, space)
           s.effects[effect] = !s.effects[effect];
+          // Record macro event
+          if (typeof Macro !== 'undefined') {
+            Macro.recordEvent(`effect_${effect}`, s.effects[effect]);
+          }
         } else if (effect in s) {
           // Sound-reactive effects and other boolean settings
           s[effect] = !s[effect];
+          // Record macro event
+          if (typeof Macro !== 'undefined') {
+            Macro.recordEvent(`sr_${effect}`, s[effect]);
+          }
         }
         btn.classList.toggle('active');
       });
