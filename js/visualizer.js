@@ -101,12 +101,12 @@ function draw() {
     Effects.updateParticles(ctx, data, barW, gap, H, count);
   }
 
-  if (s.effects.bloom || bt.bloom) {
+  // Don't mix bloom and fade - they cause smearing
+  const bloomActive = s.effects.bloom || bt.bloom;
+  if (bloomActive) {
     Effects.applyBloom(ctx, canvas);
   }
-
-  // Skip fade if bloom is active (they conflict and cause smearing)
-  if (fadeActive && !(s.effects.bloom || bt.bloom)) {
+  if (fadeActive && !bloomActive) {
     Effects.applyFade(ctx, canvas);
   }
 
