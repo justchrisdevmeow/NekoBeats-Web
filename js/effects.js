@@ -56,8 +56,8 @@ const Effects = (() => {
     if (intensity <= 0) return;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    ctx.filter = `blur(${Math.round(intensity * 2)}px)`;
-    ctx.globalAlpha = intensity * 0.1;
+    ctx.filter = `blur(${Math.round(intensity * 25)}px)`;
+    ctx.globalAlpha = intensity * 0.8;
     ctx.drawImage(canvas, 0, 0);
     ctx.filter = 'none';
     ctx.globalAlpha = 1;
@@ -90,9 +90,9 @@ const Effects = (() => {
     const barCount = s.barCount;
 
     for (let i = 0; i < barCount; i++) {
-      if (particles.length < maxParticles && Math.random() < 0.05) {
+      if (particles.length < maxParticles && Math.random() < 0.25) {
         const val = data[i] / 255;
-        if (val > 0.7) {
+        if (val > 0.5) {
           const x = i * (barW + gap) + barW / 2;
           const barH = val * canvasH * s.heightScale;
           const y = canvasH - barH;
@@ -135,26 +135,26 @@ const Effects = (() => {
   function drawSpace(ctx, W, H) {
     if (!starsInit || stars.length === 0) initStars(W, H);
     ctx.save();
-    ctx.fillStyle = '#030308';
-    ctx.fillRect(0, 0, W, H);
-
+    
+    // Draw nebula overlays instead of filling background
     const nebula = ctx.createRadialGradient(W * 0.3, H * 0.4, 0, W * 0.3, H * 0.4, W * 0.5);
-    nebula.addColorStop(0, 'rgba(0,50,80,0.15)');
+    nebula.addColorStop(0, 'rgba(0,50,80,0.08)');
     nebula.addColorStop(1, 'transparent');
     ctx.fillStyle = nebula;
     ctx.fillRect(0, 0, W, H);
 
     const nebula2 = ctx.createRadialGradient(W * 0.7, H * 0.6, 0, W * 0.7, H * 0.6, W * 0.4);
-    nebula2.addColorStop(0, 'rgba(80,0,80,0.1)');
+    nebula2.addColorStop(0, 'rgba(80,0,80,0.06)');
     nebula2.addColorStop(1, 'transparent');
     ctx.fillStyle = nebula2;
     ctx.fillRect(0, 0, W, H);
 
+    // Draw scrolling stars
     for (const s of stars) {
       s.x -= s.speed;
       if (s.x < 0) { s.x = W; s.y = Math.random() * H; }
       const flicker = 0.5 + Math.sin(Date.now() * 0.003 * s.speed) * 0.5;
-      ctx.globalAlpha = s.brightness * flicker * 0.8;
+      ctx.globalAlpha = s.brightness * flicker * 0.6;
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
