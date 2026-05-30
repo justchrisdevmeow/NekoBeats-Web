@@ -63,6 +63,7 @@ function draw() {
   const bt = BarThemes.current();
 
   if (s.effects.space || bt.space) {
+    ctx.clearRect(0, 0, W, H);
     Effects.drawSpace(ctx, W, H);
   } else if (!(s.effects.fade || bt.fade)) {
     ctx.clearRect(0, 0, W, H);
