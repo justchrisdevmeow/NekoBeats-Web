@@ -24,11 +24,11 @@ function drawWatermark(ctx, W, H) {
   ctx.fillText('🐱', padding, padding);
   
   // Text next to emoji (shorter version)
-  ctx.fillText('Made with NekoBeats', padding + 22, padding);
+  ctx.fillText('NekoBeats', padding + 22, padding);
   
   // URL below (shorter)
   ctx.font = `${Math.max(9, baseSize - 2)}px monospace`;
-  ctx.fillText('sides.catsdevs.online/NekoBeats-Web/', padding + 22, padding + lineHeight);
+  ctx.fillText('sides.catsdevs.online/NekoBeats-Web', padding + 22, padding + lineHeight);
   
   ctx.restore();
 }
@@ -38,6 +38,14 @@ function draw() {
   if (!NB.analyser) return;
 
   updateProgress();
+
+  // Update current lyric
+  if (NB.buffer && NB.playing) {
+    const elapsed = NB.audioCtx.currentTime - NB.startTime + NB.startOffset;
+    NB.currentLyric = getCurrentLyric(elapsed);
+  } else if (NB.pausedAt > 0) {
+    NB.currentLyric = getCurrentLyric(NB.pausedAt);
+  }
 
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
@@ -92,9 +100,46 @@ function draw() {
   if (window.isRecording) {
     drawWatermark(ctx, W, H);
   }
+
+  if (NB.showLyrics && NB.currentLyric) {
+    drawLyrics(ctx, W, H, NB.currentLyric);
+  }
 }
 
 window.draw = draw;
+
+function drawLyrics(ctx, W, H, lyricText) {
+  const baseSize = Math.max(16, Math.min(W, H) * 0.045);
+  
+  ctx.save();
+  ctx.font = `${baseSize}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  // Background box
+  const padding = 20;
+  const lineHeight = baseSize + 8;
+  const boxWidth = W - padding * 2;
+  const boxHeight = lineHeight + padding;
+  const boxY = H * 0.7;
+  
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect((W - boxWidth) / 2, boxY, boxWidth, boxHeight, 8) : ctx.rect((W - boxWidth) / 2, boxY, boxWidth, boxHeight);
+  ctx.fill();
+  
+  // Lyric text with glow
+  ctx.shadowColor = 'rgba(0, 207, 209, 0.6)';
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  
+  ctx.fillStyle = '#00cfd1';
+  ctx.fillText(lyricText, W / 2, boxY + boxHeight / 2);
+  
+  ctx.restore();
+}
+
 
 function drawBars(ctx, data, W, H, bt) {
   const s = NB.settings;
