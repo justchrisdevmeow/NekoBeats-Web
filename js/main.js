@@ -11,6 +11,7 @@ const NB = {
   lyrics: [],
   showLyrics: true,
   currentLyric: '',
+  lyricChangedAt: 0,
   pausedAt: 0,
 
   settings: {
