@@ -5,7 +5,7 @@
   "corner_radius": 0,
   "gap": 2,
   "stroke_width": 1,
-  "bloom": true,
+  "bloom": null,
   "bloom_intensity": 0.7,
   "fade": true,
   "fade_speed": 0.04,
