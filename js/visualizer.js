@@ -37,13 +37,22 @@ function draw() {
   NB.animId = requestAnimationFrame(draw);
   if (!NB.analyser) return;
 
-  // Check if 3D mode is enabled
-  if (NB.settings.is3D && typeof Visualizer3D !== 'undefined') {
+  updateProgress();
+
+  const canvas = document.getElementById('canvas');
+  const W = canvas.width;
+  const H = canvas.height;
+  const s = NB.settings;
+
+  // Check if 3D mode is enabled BEFORE getting 2D context
+  if (s.is3D && typeof Visualizer3D !== 'undefined') {
     Visualizer3D.render();
     return;
   }
 
-  updateProgress();
+  // Only get 2D context if NOT in 3D mode
+  const ctx = canvas.getContext('2d');
+  const bt = BarThemes.current();
 
   // Update current lyric
   if (NB.buffer && NB.playing) {
@@ -60,13 +69,6 @@ function draw() {
       NB.lyricChangedAt = Date.now();
     }
   }
-
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
-  const s = NB.settings;
-  const bt = BarThemes.current();
 
   const fadeActive = s.effects.fade || bt.fade;
   const spaceActive = s.effects.space || bt.space;
