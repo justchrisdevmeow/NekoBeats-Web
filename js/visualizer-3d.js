@@ -11,23 +11,13 @@ const Visualizer3D = (() => {
     const canvas = document.getElementById('canvas');
     if (!canvas) return;
     
-    // Check if WebGL is actually supported
-    try {
-      const testCanvas = document.createElement('canvas');
-      const webglContext = testCanvas.getContext('webgl') || testCanvas.getContext('webgl2');
-      if (!webglContext) {
-        throw new Error('WebGL context not available');
-      }
-    } catch (e) {
-      console.error('WebGL not supported on this browser');
-      NB.settings.is3D = false;
-      const btn = document.getElementById('3d-mode-toggle');
-      if (btn) btn.classList.remove('active');
-      return;
-    }
-    
     const W = canvas.width;
     const H = canvas.height;
+    
+    if (W === 0 || H === 0) {
+      console.warn('Canvas has invalid dimensions:', W, H);
+      return;
+    }
     
     try {
       // Scene setup
@@ -39,20 +29,23 @@ const Visualizer3D = (() => {
       camera = new THREE.PerspectiveCamera(75, W / H, 0.1, 10000);
       camera.position.set(0, 0, 100);
       
-      // Renderer - let Three.js create the WebGL context
-      renderer = new THREE.WebGLRenderer({ 
+      // Renderer with fallback options
+      const rendererOptions = {
         canvas: canvas,
         antialias: true,
         alpha: false,
-        powerPreference: 'high-performance'
-      });
+        failIfMajorPerformanceCaveat: false,
+        preserveDrawingBuffer: false,
+        stencil: false
+      };
+      
+      renderer = new THREE.WebGLRenderer(rendererOptions);
       renderer.setSize(W, H);
-      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      
+      console.log('WebGL initialized successfully');
     } catch (error) {
-      console.error('WebGL initialization failed:', error);
-      if (typeof window.setStatus !== 'undefined') {
-        window.setStatus('WebGL not supported - 3D disabled', '❌');
-      }
+      console.error('Three.js initialization failed:', error);
       NB.settings.is3D = false;
       const btn = document.getElementById('3d-mode-toggle');
       if (btn) btn.classList.remove('active');
