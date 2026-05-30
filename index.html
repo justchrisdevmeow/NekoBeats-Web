@@ -32,8 +32,14 @@
   <div id="transport">
     <button id="file-btn">upload track</button>
     <input type="file" id="file-input" accept="audio/*" style="display:none;">
+    <button id="lrc-btn">upload lyrics</button>
+    <input type="file" id="lrc-input" accept=".lrc" style="display:none;">
     <button id="play-pause-btn">⏸</button>
     <span id="track-name">no track loaded</span>
+    <label class="toggle-wrap">
+      <input type="checkbox" id="show-lyrics-toggle" checked>
+      <span class="toggle-label">lyrics</span>
+    </label>
     <label class="toggle-wrap">
       <input type="checkbox" id="loop-toggle">
       <span class="toggle-label">loop</span>
