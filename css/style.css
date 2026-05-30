@@ -183,6 +183,23 @@ canvas {
 
 #file-btn:hover { background: var(--primary); color: var(--bg); }
 
+#lrc-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 7px 16px;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+#lrc-btn:hover { background: var(--primary); color: var(--bg); }
+
 #track-name {
   font-size: 12px;
   color: var(--muted);
