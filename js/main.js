@@ -47,6 +47,162 @@ const NB = {
 window.NB = NB;
 window.isRecording = false;
 
+// Macro system
+const Macro = {
+  events: [],
+  isRecording: false,
+  isPlaying: false,
+  startTime: 0,
+  
+  startRecording() {
+    if (!NB.buffer || !NB.playing) {
+      setStatus('play a track first', '🎵');
+      return;
+    }
+    this.events = [];
+    this.isRecording = true;
+    this.startTime = NB.audioCtx.currentTime;
+    setStatus('macro recording...', '●');
+    updateMacroUI();
+  },
+  
+  stopRecording() {
+    this.isRecording = false;
+    setStatus(`macro recorded: ${this.events.length} events`, '✓');
+    updateMacroUI();
+  },
+  
+  recordEvent(key, value) {
+    if (!this.isRecording) return;
+    const elapsed = NB.audioCtx.currentTime - this.startTime;
+    this.events.push({ time: elapsed, key, value });
+  },
+  
+  playback() {
+    if (this.events.length === 0) {
+      setStatus('no macro recorded', '❌');
+      return;
+    }
+    
+    if (!NB.buffer || !NB.playing) {
+      setStatus('play a track first', '🎵');
+      return;
+    }
+    
+    this.isPlaying = true;
+    this.startTime = NB.audioCtx.currentTime;
+    setStatus('macro playing...', '▶');
+    updateMacroUI();
+  },
+  
+  stopPlayback() {
+    this.isPlaying = false;
+    setStatus('macro stopped', '⏹');
+    updateMacroUI();
+  },
+  
+  clear() {
+    this.events = [];
+    this.isRecording = false;
+    this.isPlaying = false;
+    setStatus('macro cleared', '🗑');
+    updateMacroUI();
+  },
+  
+  export() {
+    const data = {
+      events: this.events,
+      timestamp: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `macro_${new Date().getTime()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setStatus('macro exported', '💾');
+  },
+  
+  importFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        this.events = data.events || [];
+        setStatus(`macro loaded: ${this.events.length} events`, '✓');
+        updateMacroUI();
+      } catch (err) {
+        setStatus('error loading macro', '❌');
+      }
+    };
+    reader.readAsText(file);
+  }
+};
+
+function updateMacroUI() {
+  const recordBtn = document.getElementById('macro-record-btn');
+  const stopBtn = document.getElementById('macro-stop-btn');
+  const playBtn = document.getElementById('macro-play-btn');
+  const clearBtn = document.getElementById('macro-clear-btn');
+  const exportBtn = document.getElementById('macro-export-btn');
+  const importBtn = document.getElementById('macro-import-btn');
+  const list = document.getElementById('macro-list');
+  const eventsList = document.getElementById('macro-events-list');
+  
+  if (Macro.isRecording) {
+    recordBtn.style.display = 'none';
+    stopBtn.style.display = 'inline-block';
+  } else {
+    recordBtn.style.display = 'inline-block';
+    stopBtn.style.display = 'none';
+  }
+  
+  if (Macro.isPlaying) {
+    playBtn.textContent = '⏸ pause';
+  } else {
+    playBtn.textContent = '▶ play';
+  }
+  
+  if (Macro.events.length > 0) {
+    playBtn.style.display = 'inline-block';
+    clearBtn.style.display = 'inline-block';
+    exportBtn.style.display = 'inline-block';
+    importBtn.style.display = 'inline-block';
+    list.style.display = 'block';
+    
+    eventsList.innerHTML = Macro.events.slice(-10).map((e, i) => 
+      `<div>${i + 1}. ${e.key} @ ${e.time.toFixed(2)}s</div>`
+    ).join('');
+  } else {
+    playBtn.style.display = 'none';
+    clearBtn.style.display = 'none';
+    exportBtn.style.display = 'none';
+    importBtn.style.display = 'none';
+    list.style.display = 'none';
+  }
+}
+
+function applyMacroEvent(key, value) {
+  const s = NB.settings;
+  
+  // Handle different setting types
+  if (key in s) {
+    s[key] = value;
+    // Update UI if needed
+    const elem = document.getElementById(key) || document.getElementById(key + '-num');
+    if (elem) elem.value = value;
+  } else if (key.startsWith('effect_')) {
+    const effect = key.replace('effect_', '');
+    s.effects[effect] = value;
+  } else if (key.startsWith('sr_')) {
+    const effect = key.replace('sr_', '');
+    s[effect] = value;
+  }
+}
+
+window.Macro = Macro;
+
 function parseLRC(text) {
   const lines = text.split('\n');
   const lyrics = [];
@@ -513,6 +669,34 @@ document.addEventListener('DOMContentLoaded', () => {
       if (bgSizeIndicator) bgSizeIndicator.style.display = 'none';
       setStatus('background cleared', '🗑');
       setTimeout(() => setStatus('ready', '🐱'), 1500);
+    });
+  }
+
+  // Macro buttons
+  const macroRecordBtn = document.getElementById('macro-record-btn');
+  const macroStopBtn = document.getElementById('macro-stop-btn');
+  const macroPlayBtn = document.getElementById('macro-play-btn');
+  const macroClearBtn = document.getElementById('macro-clear-btn');
+  const macroExportBtn = document.getElementById('macro-export-btn');
+  const macroImportBtn = document.getElementById('macro-import-btn');
+  const macroImportInput = document.getElementById('macro-import-input');
+  
+  if (macroRecordBtn) macroRecordBtn.addEventListener('click', () => Macro.startRecording());
+  if (macroStopBtn) macroStopBtn.addEventListener('click', () => Macro.stopRecording());
+  if (macroPlayBtn) macroPlayBtn.addEventListener('click', () => {
+    if (Macro.isPlaying) {
+      Macro.stopPlayback();
+    } else {
+      Macro.playback();
+    }
+  });
+  if (macroClearBtn) macroClearBtn.addEventListener('click', () => Macro.clear());
+  if (macroExportBtn) macroExportBtn.addEventListener('click', () => Macro.export());
+  if (macroImportBtn) macroImportBtn.addEventListener('click', () => macroImportInput.click());
+  if (macroImportInput) {
+    macroImportInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) Macro.importFile(file);
     });
   }
 
