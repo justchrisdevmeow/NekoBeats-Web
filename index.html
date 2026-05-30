@@ -172,6 +172,24 @@
         <input type="file" id="import-theme-input" accept=".json" style="display:none;">
         <button id="export-video-btn">export video</button>
       </div>
+      
+      <div class="panel-title" style="margin-top:16px;">macros</div>
+      <div class="btn-group">
+        <button id="macro-record-btn">● record</button>
+        <button id="macro-stop-btn" style="display:none;">⏹ stop</button>
+        <button id="macro-play-btn" style="display:none;">▶ play</button>
+        <button id="macro-clear-btn" style="display:none;">clear</button>
+      </div>
+      <div id="macro-list" style="font-size:12px; color:#888; margin-top:8px; padding:8px; background:#0a0a0a; border-radius:4px; display:none; max-height:100px; overflow-y:auto;">
+        <div style="margin-bottom:4px; color:#00cfd1; font-weight:bold;">Recorded Events:</div>
+        <div id="macro-events-list"></div>
+      </div>
+      <div class="btn-group" style="margin-top:10px;">
+        <button id="macro-export-btn" style="display:none;">export macro</button>
+        <button id="macro-import-btn" style="display:none;">import macro</button>
+        <input type="file" id="macro-import-input" accept=".json" style="display:none;">
+      </div>
+      
       <div class="panel-title" style="margin-top:16px;">background</div>
       <div class="btn-group">
         <button id="bg-upload-btn">upload background</button>
