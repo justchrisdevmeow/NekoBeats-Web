@@ -13,6 +13,7 @@ const NB = {
   currentLyric: '',
   lyricChangedAt: 0,
   pausedAt: 0,
+  cachedBackgroundImage: null,
 
   settings: {
     barCount: 64,
@@ -488,7 +489,8 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = ev => {
           const img = new Image();
           img.onload = () => {
-            NB.settings.customBackground = ev.target.result;
+            NB.settings.customBackground = true;
+            NB.cachedBackgroundImage = img;
             if (bgSizeIndicator) bgSizeIndicator.style.display = 'block';
             setStatus('background loaded: ' + file.name, '🖼');
             setTimeout(() => setStatus('ready', '🐱'), 2000);
@@ -507,7 +509,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const bgClearBtn = document.getElementById('bg-clear-btn');
   if (bgClearBtn) {
     bgClearBtn.addEventListener('click', () => {
-      NB.settings.customBackground = null;
+      NB.settings.customBackground = false;
+      NB.cachedBackgroundImage = null;
       if (bgSizeIndicator) bgSizeIndicator.style.display = 'none';
       setStatus('background cleared', '🗑');
       setTimeout(() => setStatus('ready', '🐱'), 1500);
