@@ -65,6 +65,19 @@ function draw() {
   const fadeActive = s.effects.fade || bt.fade;
   const spaceActive = s.effects.space || bt.space;
 
+  // Apply macro events during playback
+  if (typeof Macro !== 'undefined' && Macro.isPlaying && NB.playing) {
+    const elapsedSinceMacroStart = NB.audioCtx.currentTime - Macro.startTime;
+    Macro.events.forEach(event => {
+      if (Math.abs(event.time - elapsedSinceMacroStart) < 0.05) {
+        // Apply event if we're within 50ms of the recorded time
+        if (typeof applyMacroEvent !== 'undefined') {
+          applyMacroEvent(event.key, event.value);
+        }
+      }
+    });
+  }
+
   if (!fadeActive) {
     ctx.clearRect(0, 0, W, H);
   }
