@@ -17,9 +17,9 @@ const NB = {
   settings: {
     barCount: 64,
     heightScale: 1.5,
-    sensitivity: 1.0,
+    sensitivity: 0.3,
     opacityVal: 1.0,
-    smoothing: 0.3,
+    smoothing: 0.8,
     rainbowSpeed: 1.0,
     bloomIntensity: 0.8,
     fadeSpeed: 0.05,
@@ -29,6 +29,11 @@ const NB = {
     barColor: '#00cfd1',
     gradStart: '#00cfd1',
     gradEnd: '#ff006e',
+    is3D: false,
+    customBackground: null,
+    soundReactiveGlow: false,
+    soundReactiveColorShift: false,
+    soundReactiveBurst: false,
     effects: {
       bloom: false,
       fade: false,
@@ -377,6 +382,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (canvas && wrap) {
       canvas.width = wrap.clientWidth;
       canvas.height = wrap.clientHeight;
+      // Update size indicator
+      const windowSizeSpan = document.getElementById('window-size');
+      if (windowSizeSpan) {
+        windowSizeSpan.textContent = `${canvas.width}×${canvas.height}`;
+      }
     }
   }
   resizeCanvas();
@@ -462,6 +472,46 @@ document.addEventListener('DOMContentLoaded', () => {
   const exportVideoBtn = document.getElementById('export-video-btn');
   if (exportVideoBtn) {
     exportVideoBtn.addEventListener('click', toggleRecording);
+  }
+
+  // Background upload
+  const bgUploadBtn = document.getElementById('bg-upload-btn');
+  const bgUploadInput = document.getElementById('bg-upload-input');
+  const bgSizeIndicator = document.getElementById('bg-size-indicator');
+  if (bgUploadBtn && bgUploadInput) {
+    bgUploadBtn.addEventListener('click', () => bgUploadInput.click());
+    bgUploadInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) {
+        setStatus('loading background: ' + file.name, '⏳');
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const img = new Image();
+          img.onload = () => {
+            NB.settings.customBackground = ev.target.result;
+            if (bgSizeIndicator) bgSizeIndicator.style.display = 'block';
+            setStatus('background loaded: ' + file.name, '🖼');
+            setTimeout(() => setStatus('ready', '🐱'), 2000);
+          };
+          img.onerror = () => {
+            setStatus('error loading background image', '❌');
+          };
+          img.src = ev.target.result;
+        };
+        reader.onerror = () => setStatus('error: could not read file', '❌');
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  const bgClearBtn = document.getElementById('bg-clear-btn');
+  if (bgClearBtn) {
+    bgClearBtn.addEventListener('click', () => {
+      NB.settings.customBackground = null;
+      if (bgSizeIndicator) bgSizeIndicator.style.display = 'none';
+      setStatus('background cleared', '🗑');
+      setTimeout(() => setStatus('ready', '🐱'), 1500);
+    });
   }
 
   setStatus('ready', '🐱');
