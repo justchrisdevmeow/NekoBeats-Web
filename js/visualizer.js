@@ -37,21 +37,19 @@ function draw() {
   NB.animId = requestAnimationFrame(draw);
   if (!NB.analyser) return;
 
-  updateProgress();
-
-  const canvas = document.getElementById('canvas');
-  const W = canvas.width;
-  const H = canvas.height;
-  const s = NB.settings;
-
-  // Check if 3D mode is enabled BEFORE getting 2D context
-  if (s.is3D && typeof Visualizer3D !== 'undefined') {
+  // Check for 3D mode first
+  if (NB.settings.is3D && typeof Visualizer3D !== 'undefined') {
     Visualizer3D.render();
     return;
   }
 
-  // Only get 2D context if NOT in 3D mode
+  updateProgress();
+
+  const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const s = NB.settings;
   const bt = BarThemes.current();
 
   // Update current lyric
