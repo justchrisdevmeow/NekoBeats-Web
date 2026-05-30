@@ -12,23 +12,34 @@ const Visualizer3D = (() => {
     const W = canvas.width;
     const H = canvas.height;
     
-    // Scene setup
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
-    scene.fog = new THREE.Fog(0x000000, 2000, 3000);
-    
-    // Camera
-    camera = new THREE.PerspectiveCamera(75, W / H, 0.1, 10000);
-    camera.position.set(0, 0, 100);
-    
-    // Renderer
-    renderer = new THREE.WebGLRenderer({ 
-      canvas: canvas,
-      antialias: true,
-      alpha: false
-    });
-    renderer.setSize(W, H);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    try {
+      // Scene setup
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x000000);
+      scene.fog = new THREE.Fog(0x000000, 2000, 3000);
+      
+      // Camera
+      camera = new THREE.PerspectiveCamera(75, W / H, 0.1, 10000);
+      camera.position.set(0, 0, 100);
+      
+      // Renderer - explicitly request WebGL
+      const contextOptions = {
+        canvas: canvas,
+        antialias: true,
+        alpha: false,
+        context: canvas.getContext('webgl') || canvas.getContext('webgl2')
+      };
+      
+      renderer = new THREE.WebGLRenderer(contextOptions);
+      renderer.setSize(W, H);
+      renderer.setPixelRatio(window.devicePixelRatio);
+    } catch (error) {
+      console.error('WebGL initialization failed:', error);
+      setStatus('WebGL not supported - 3D disabled', '❌');
+      NB.settings.is3D = false;
+      document.getElementById('3d-mode-toggle').classList.remove('active');
+      return;
+    }
     
     // Lighting
     const light = new THREE.PointLight(0xffffff, 1, 500);
