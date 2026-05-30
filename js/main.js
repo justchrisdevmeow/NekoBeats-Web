@@ -21,7 +21,7 @@ const NB = {
     opacityVal: 1.0,
     smoothing: 0.3,
     rainbowSpeed: 1.0,
-    bloomIntensity: 0.5,
+    bloomIntensity: 0.8,
     fadeSpeed: 0.05,
     particleCount: 50,
     mode: 'bars',
